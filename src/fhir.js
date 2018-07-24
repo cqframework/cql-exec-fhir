@@ -245,7 +245,11 @@ function toCode(f) {
   if (Array.isArray(f)) {
     return f.map(c => toCode(c));
   } else if (f.getTypeInfo().name == 'FHIR.CodeableConcept') {
-    return f.coding.map(c => toCode(c));
+    if (f.coding === undefined || f.coding == null) {
+      return null;
+    } else {
+      return f.coding.map(c => toCode(c));
+    }
   } else if (f.getTypeInfo().name == 'FHIR.Coding') {
     return new cql.Code(f.code.value, f.system ? f.system.value : f.system, f.version ? f.version.value : f.version);
   }
