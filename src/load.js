@@ -19,10 +19,10 @@ function load(filePathOrXML) {
     attrNameProcessors: [processors.stripPrefix]
   };
   xml2js.parseString(xml, opts, (err, result) => {
-    if (typeof err !== 'undefined' && err != null) {
+    if (err != null) {
       console.error(`Failed to load model info from ${name}:`, err);
       return;
-    } else if (typeof result.modelInfo === 'undefined') {
+    } else if (result.modelInfo == null) {
       console.error(`Model info is not valid for ${name}`);
       return;
     }
@@ -40,15 +40,15 @@ class ModelInfo {
     this._classesByName = new Map();
 
     for (const t of info.typeInfo) {
-      if (typeof t.$ !== 'undefined' && (t.$.type.endsWith('ClassInfo') || t.$.type.endsWith('ProfileInfo'))) {
+      if (t.$ != null && (t.$.type.endsWith('ClassInfo') || t.$.type.endsWith('ProfileInfo'))) {
         const classInfo = new ClassInfo(t, this);
-        if (typeof classInfo.label !== 'undefined') {
+        if (classInfo.label != null) {
           this._classesByLabel.set(classInfo.label, classInfo);
         }
-        if (typeof classInfo.identifier !== 'undefined') {
+        if (classInfo.identifier != null) {
           this._classesByIdentifier.set(classInfo.identifier, classInfo);
         }
-        if (typeof classInfo.name !== 'undefined') {
+        if (classInfo.name != null) {
           this._classesByName.set(classInfo.name, classInfo);
         }
       }
@@ -89,7 +89,7 @@ class ClassInfo {
     this._modelInfo = modelInfo;
     this._attrs = t.$;
     this._elementsByName = new Map();
-    if (typeof t.element !== 'undefined') {
+    if (t.element != null) {
       for (const e of t.element) {
         const element = new ClassElement(e, modelInfo);
         this._elementsByName.set(element.name, element);
@@ -107,7 +107,8 @@ class ClassInfo {
 
   findElement(el) {
     let element = this._elementsByName.get(el);
-    if (typeof element === 'undefined' && typeof this.baseType !== 'undefined') {
+    // TODO: Should we add support for when the base type is a System type?
+    if (element == null && this.baseType != null && !this.baseType.startsWith('System.')) {
       element = this._modelInfo.findClass(this.baseType).findElement(el);
     }
     return element;
@@ -115,8 +116,9 @@ class ClassInfo {
 }
 
 class ClassElement {
-  constructor(e) {
+  constructor(e, modelInfo) {
     this._attrs = e.$;
+    this._modelInfo = modelInfo;
   }
 
   get name() { return this._attrs.name; }
@@ -133,6 +135,27 @@ class ClassElement {
   get isList() { return this._attrs.type.startsWith('list<'); }
   get isInterval() { return this._attrs.type.startsWith('Interval<');}
   get isSystemType() { return this.type.startsWith('System.'); }
+  get isFHIRPrimitive() {
+    return !this.isList && !this.isInterval && typeIsFHIRPrimitive(this, this._modelInfo);
+  }
+  get isListOfFHIRPrimitives() {
+    return this.isList && typeIsFHIRPrimitive(this, this._modelInfo);
+  }
+}
+
+function typeIsFHIRPrimitive(element, modelInfo) {
+  // If its type is something like FHIR.string, FHIR.date, etc., it's a primitive
+  if (element.type.startsWith('FHIR.') && element.type[5].toLowerCase() == element.type[5]) {
+    return true;
+  }
+  // The FHIR modelinfo represents code elements as a unique class type with a single string 'value'.
+  // e.g., Goal's 'status' element has type 'GoalStatus', which just has a string value element.
+  const typeInfo = modelInfo.findClass(element.type);
+  if (typeInfo && typeInfo.baseType === 'FHIR.Element' && typeInfo.elements.length === 1) {
+    const property = typeInfo.findElement('value');
+    return property && property.type === 'System.String';
+  }
+  return false;
 }
 
 module.exports = load;

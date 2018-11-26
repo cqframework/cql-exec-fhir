@@ -56,15 +56,25 @@ class FHIRObject {
       _typeInfo: { value: typeInfo, enumerable: false },
       _modelInfo: { value: modelInfo, enumerable: false },
     });
-    if (typeof typeInfo === 'undefined') {
+    if (typeInfo == null) {
       console.error(`Failed to locate typeInfo for ${json}`);
       return;
     }
 
-    for (const el of typeInfo.elements) {
-      Object.defineProperty(this, el.name, {
+    const elementNames = new Set();
+    for (let currentInfo = typeInfo; currentInfo != null; ) {
+      currentInfo.elements.forEach(e => elementNames.add(e.name));
+      if (currentInfo.baseType != null) {
+        currentInfo = modelInfo.findClass(currentInfo.baseType);
+      } else {
+        currentInfo = null;
+      }
+    }
+
+    for (const name of elementNames) {
+      Object.defineProperty(this, name, {
         get: function() {
-          return this.get(el.name);
+          return this.get(name);
         },
         enumerable: true
       });
@@ -73,15 +83,14 @@ class FHIRObject {
 
   // Required by cql-execution API
   get(field) {
-    if (typeof this._json === 'undefined') {
-      return;
-    } else if (this.isFHIRPrimitive() && field != 'value') {
-      // TODO: Add support for getting id or extensions on primitives (which are stored in properties starting with _)
-      console.error(`Traversing into FHIR primitives isn't supported (except value): ${this._typeInfo.name}.${field}.`);
-      return;
+    if (this._json == null) {
+      // preserve distinction between null or undefined
+      return this._json;
     }
 
-    const [root, suffix] = field.split('.', 2);
+    const parts = field.split('.');
+    const root = parts[0];
+    const suffix = parts.length > 1 ? parts.splice(1).join('.') : undefined;
     const element = this._typeInfo.findElement(root);
     if (typeof element === 'undefined') {
       console.error(`Failed to locate element for ${this._typeInfo.name}.${root}`);
@@ -90,39 +99,30 @@ class FHIRObject {
 
     if (element.isSystemType) {
       // TODO: If there is a suffix, we need to drill into the CQL system type!
-      if (typeof suffix !== 'undefined') {
+      if (suffix != null) {
         console.error(`Traversing into CQL system types isn't supported: ${this._typeInfo.name}.${root}.${suffix}.`);
         return;
-      }
-      if (element.name == 'value') {
-        // Even though the FHIR model has a value attribute, it doesn't come through in JSON serialization
-        return convert(element, this._json);
       }
       return convert(element, this._json[root]);
     }
 
-    const rootClassInfo = this._modelInfo.findClass(element.type);
-    const toFHIRObject = (data) => {
-      if (typeof data === 'undefined' ) {
-        return;
-      }
-      const rootObject = new FHIRObject(data, rootClassInfo, this._modelInfo);
-      if (typeof suffix !== 'undefined') {
-        return rootObject.get(suffix);
-      }
-      return rootObject;
-    };
+    const data = getPropertyFromJSON(element, this._json, root);
+    if (data == null) {
+      // preserve distinction between null or undefined
+      return data;
+    }
 
-    const data = this._json[root];
-    if (typeof data === 'undefined') {
-      return;
-    }
+    const rootClassInfo = this._modelInfo.findClass(element.type);
     if (element.isList) {
-      return data.map(item => toFHIRObject(item));
+      return data.map(item => toFHIRObject(item, suffix, rootClassInfo, this._modelInfo));
     } else if (element.isInterval) {
-      return new cql.Interval(toFHIRObject(data.low), toFHIRObject(data.high), data.lowClosed, data.highClosed);
+      return new cql.Interval(
+        toFHIRObject(data.low, suffix, rootClassInfo, this._modelInfo),
+        toFHIRObject(data.high, suffix, rootClassInfo, this._modelInfo),
+        data.lowClosed,
+        data.highClosed);
     }
-    return toFHIRObject(data);
+    return toFHIRObject(data, suffix, rootClassInfo, this._modelInfo);
   }
 
   // Required by cql-execution API (starting w/ 1.2.1)
@@ -167,10 +167,6 @@ class FHIRObject {
   }
 
   getTypeInfo() { return this._typeInfo; }
-
-  isFHIRPrimitive() {
-    return this._typeInfo.name.startsWith('FHIR.') && this._typeInfo.name[5].toLowerCase() == this._typeInfo.name[5];
-  }
 }
 
 class Patient extends FHIRObject {
@@ -193,7 +189,7 @@ class Patient extends FHIRObject {
 
   findRecords(profile) {
     const classInfo = this._modelInfo.findClass(profile);
-    if (typeof classInfo === 'undefined') {
+    if (classInfo == null) {
       console.error(`Failed to find type info for ${profile}`);
       return [];
     }
@@ -207,9 +203,65 @@ class Patient extends FHIRObject {
   }
 }
 
+/**
+ * Extracts a property from the JSON, with special support for handling FHIR primitives that
+ * may be spread out over two properties (`${property}` and `_${property}`).
+ * @see http://hl7.org/fhir/STU3/json.html#primitive
+ * @param {ClassElement} element - the element information for the property being retrieved
+ * @param {Object} json - the JSON representation from which to extract the property
+ * @param {string} property - the property name to extract
+ * @returns {Object}
+ */
+function getPropertyFromJSON(element, json, property) {
+  const value = json[property];
+  const extra = json[`_${property}`];
+  if (json[property] == null && json[`_${property}`] == null) {
+    return json[property];
+  }
+  // Special handing for FHIR ids and extensions on primitives.
+  if (element.isFHIRPrimitive || element.isListOfFHIRPrimitives) {
+    // Normalize (or copy) to arrays to better share code between lists and non-lists
+    const valueArr = (element.isList && Array.isArray(value)) ? [...value] : [value];
+    const extraArr = (element.isList && Array.isArray(extra)) ? [...extra] : [extra];
+    // Make sure arrays are of same length for easier processing
+    while (valueArr.length > extraArr.length) {
+      extraArr.push(undefined);
+    }
+    while (extraArr.length > valueArr.length) {
+      valueArr.push(undefined);
+    }
+
+    const data = [];
+    for (let i=0; i < valueArr.length; i++) {
+      let item = {};
+      if (typeof valueArr[i] !== 'undefined') {
+        item.value = valueArr[i];
+      }
+      if (extraArr[i] != null) {
+        Object.assign(item, extraArr[i]);
+      }
+      if (valueArr[i] == null && extraArr[i] == null) {
+        // preserve undefined/null nature of value if neither value nor extra were found
+        item = valueArr[i];
+      }
+      data.push(item);
+    }
+    return element.isList ? data : data[0];
+  }
+
+  return json[property];
+}
+
+/**
+ * Converts JSON data to the proper CQL System Type as necessary.
+ * @param {ClassElement} classElement - the element information for the data being converted
+ * @param {Object} data - the data to convert to the proper CQL System type
+ * @returns {Object}
+ */
 function convert(classElement, data) {
-  if (typeof data === 'undefined') {
-    return null;
+  if (data == null) {
+    // preserve distinction between null or undefined
+    return data;
   } else if (classElement.isList) {
     return data.map(item => convert(item));
   } else if (classElement.isInterval) {
@@ -226,7 +278,7 @@ function convert(classElement, data) {
   case 'System.Concept':
   case 'System.Quantity':
     // Currently, these aren't used as leaf nodes in the FHIR model infos!
-    return null;
+    return;
   case 'System.DateTime':
     // CQL DateTime doesn't support 'Z' right now, so account for that.
     return cql.DateTime.parse(data.replace('Z', '+00:00'));
@@ -237,16 +289,44 @@ function convert(classElement, data) {
   }
 }
 
+/**
+ * Converts data to a FHIRObject class instance
+ * @param {Object} data - the JSON data to populate the FHIR object with
+ * @param {string} suffix - the trailing part of the path to get (e.g., x.y.z)
+ * @param {ClassInfo} classInfo - the ClassInfo for the FHIR Object type
+ * @param {ModelInfo} modelInfo - the overall ModelInfo from which this class comes
+ * @returns {FHIRObject}
+ */
+function toFHIRObject(data, suffix, classInfo, modelInfo) {
+  if (data == null) {
+    // preserve distinction between null or undefined
+    return data;
+  }
+  const rootObject = new FHIRObject(data, classInfo, modelInfo);
+  if (suffix != null) {
+    return rootObject.get(suffix);
+  }
+  return rootObject;
+}
+
+/**
+ * Converts a FHIRObject instance representing a FHIR.CodeableConcept, FHIR.Coding, or FHIR.code
+ * to a CQL Code.
+ * @param {FHIRObject} f - the FHIRObject instance to convert to a CQL Code
+ * @returns {cql.Code}
+ */
 function toCode(f) {
-  if (typeof f === 'undefined' || f == null) {
-    return null;
+  if (f == null) {
+    // preserve distinction between null or undefined
+    return f;
   }
 
   if (Array.isArray(f)) {
     return f.map(c => toCode(c));
   } else if (f.getTypeInfo().name == 'FHIR.CodeableConcept') {
-    if (f.coding === undefined || f.coding == null) {
-      return null;
+    if (f.coding == null) {
+      // preserve distinction between null or undefined
+      return f.coding;
     } else {
       return f.coding.map(c => toCode(c));
     }
