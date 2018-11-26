@@ -1,7 +1,6 @@
 const cql = require('cql-execution');
 const load = require('./load');
 const FHIRv102XML = require('./modelInfos/fhir-modelinfo-1.0.2.xml.js');
-const FHIRv16XML = require('./modelInfos/fhir-modelinfo-1.6.xml.js');
 
 class PatientSource {
   constructor(filePathOrXML) {
@@ -13,11 +12,6 @@ class PatientSource {
   // Convenience factory method for getting a FHIR 1.0.2 (STU2) Patient Source
   static FHIRv102() {
     return new PatientSource(FHIRv102XML);
-  }
-
-  // Convenience factory method for getting a FHIR 1.6 (early STU3) Patient Source
-  static FHIRv16() {
-    return new PatientSource(FHIRv16XML);
   }
 
   get version() {
@@ -282,6 +276,9 @@ function convert(classElement, data) {
   case 'System.DateTime':
     // CQL DateTime doesn't support 'Z' right now, so account for that.
     return cql.DateTime.parse(data.replace('Z', '+00:00'));
+  case 'System.Date':
+    // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use this workaround
+    return cql.DateTime.parse(data) != null ? cql.DateTime.parse(data).getDate() : undefined;
   case 'System.Time':
     // CQL DateTime doesn't support 'Z' right now, so account for that.
     // NOTE: Current CQL execution treats time as a DateTime w/ date fixed to 0000-01-01.
