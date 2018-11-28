@@ -282,7 +282,7 @@ function convert(classElement, data) {
   case 'System.Time':
     // CQL DateTime doesn't support 'Z' right now, so account for that.
     // NOTE: Current CQL execution treats time as a DateTime w/ date fixed to 0000-01-01.
-    return cql.DateTime.parse(`0001-01-01T${data.replace('Z', '+00:00')}`);
+    return cql.DateTime.parse(`0000-01-01T${data.replace('Z', '+00:00')}`);
   }
 }
 

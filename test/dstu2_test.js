@@ -102,16 +102,59 @@ describe('#DSTU2', () => {
     expect(procedure.get('performedPeriod.start.value')).to.deep.equal(cql.DateTime.parse('2009-03-01T08:18:56-05:00'));
   });
 
+  it('should support getting booleans', () => {
+    const pt = patientSource.currentPatient();
+    const immunization = pt.findRecords('Immunization').find(p => p.getId() === '52bc722f-e5a3-4be2-bdf3-1001d9078165');
+    expect(immunization.get('wasNotGiven.value')).to.be.false;
+  });
+
+  it('should support getting decimals', () => {
+    const pt = patientSource.currentPatient();
+    const daly = pt.get('extension').find(e => e.url === 'http://synthetichealth.github.io/synthea/disability-adjusted-life-years');
+    expect(daly.get('valueDecimal.value')).to.deep.equal(1.6468635978517043);
+  });
+
+  it('should support getting integers', () => {
+    const pt = patientSource.currentPatient();
+    const claim = pt.findRecords('Claim').find(p => p.getId() === '391f6bb9-0a79-439b-b84f-3a3a7364c8db');
+    expect(claim.get('diagnosis')[0].get('sequence.value')).to.equal(1);
+  });
+
   it('should support getting strings', () => {
     const pt = patientSource.currentPatient();
     const procedure = pt.findRecords('Procedure').find(p => p.getId() === '9d6f2ff7-f7f2-4dbb-a271-8a8c3c501e18');
     expect(procedure.get('status.value')).to.deep.equal('completed');
   });
 
-  it('should support getting numbers', () => {
+  it('should support getting dateTimes', () => {
     const pt = patientSource.currentPatient();
-    const daly = pt.get('extension').find(e => e.url === 'http://synthetichealth.github.io/synthea/disability-adjusted-life-years');
-    expect(daly.get('valueDecimal.value')).to.deep.equal(1.6468635978517043);
+    const condition = pt.findRecords('Encounter').find(p => p.getId() === 'df950a26-42f3-4db1-93b5-50ba3cec264e');
+    const periodStart = condition.get('period.start.value');
+    expect(periodStart.isDateTime).to.be.true;
+    expect(periodStart).to.deep.equal(cql.DateTime.parse('1994-07-19T09:18:56-04:00'));
+  });
+
+  it('should support getting dates', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('Condition').find(p => p.getId() === '3c57b73b-6f28-45e7-9729-b681a1ec4156');
+    const dateRecorded = condition.get('dateRecorded.value');
+    expect(dateRecorded.isDate).to.be.true;
+    expect(dateRecorded).to.deep.equal(cql.DateTime.parse('1994-07-19').getDate());
+  });
+
+  it('should support getting times', () => {
+    const pt = patientSource.currentPatient();
+    const observation = pt.findRecords('Observation').find(p => p.getId() === '9c15c801-6bb5-47a7-a9db-8bad0cb6aa68');
+    const valueTime = observation.get('valueTime.value');
+    expect(valueTime.isTime()).to.be.true;
+    expect(valueTime).to.deep.equal(cql.DateTime.parse('0000-01-01T18:23:47.376-05:00').getTime());
+  });
+
+  it('should support getting an option of a choice', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('Condition').find(p => p.getId() === '3c57b73b-6f28-45e7-9729-b681a1ec4156');
+    // In DSTU2, you just fully spell out the choice (e.g., onset[x] datetime is retrieved as onsetDateTime)
+    expect(condition.get('onsetDateTime.value')).to.deep.equal(cql.DateTime.parse('1994-07-19T09:18:56-04:00'));
   });
 
   it('should support id and extension on primitives', () => {

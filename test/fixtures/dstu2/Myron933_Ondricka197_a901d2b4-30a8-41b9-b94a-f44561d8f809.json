@@ -6410,6 +6410,33 @@
           }
         ]
       }
+    },
+    {
+      "fullUrl": "urn:uuid:9c15c801-6bb5-47a7-a9db-8bad0cb6aa68",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "9c15c801-6bb5-47a7-a9db-8bad0cb6aa68",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://example.org",
+              "code": "1234-5",
+              "display": "Observation With Time Value"
+            }
+          ],
+          "text": "Observation With Time Value"
+        },
+        "subject": {
+          "reference": "urn:uuid:bb5e0a4a-bcb8-448b-ab0a-69f639b7dd88"
+        },
+        "encounter": {
+          "reference": "urn:uuid:024e97ca-52d5-4842-93a9-12f01ee22cdc"
+        },
+        "effectiveDateTime": "2009-03-01T08:18:56-05:00",
+        "issued": "2009-03-01T08:18:56.555-05:00",
+        "valueTime": "18:23:47.376-05:00"
+      }
     }
   ]
 }
