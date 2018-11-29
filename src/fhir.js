@@ -64,8 +64,8 @@ class FHIRObject {
     const elementNames = new Set();
     for (let currentInfo = typeInfo; currentInfo != null; ) {
       currentInfo.elements.forEach(e => elementNames.add(e.name));
-      if (currentInfo.baseType != null) {
-        currentInfo = modelInfo.findClass(currentInfo.baseType);
+      if (currentInfo.baseTypeSpecifier != null) {
+        currentInfo = modelInfo.findClass(currentInfo.baseTypeSpecifier.fqn);
       } else {
         currentInfo = null;
       }
@@ -97,22 +97,39 @@ class FHIRObject {
       return;
     }
 
-    if (element.typeSpecifier.namespace === 'System') {
+    let property = root;
+    let typeSpecifier = element.typeSpecifier;
+    // Special handling for choices to find the right value in FHIR (e.g., the property might
+    // be 'value', but in JSON, it's spelled out as 'valueDateTime')
+    if (typeSpecifier.isChoice) {
+      for (const choice of typeSpecifier.choices) {
+        if (choice.isNamed) {
+          const choiceProperty = `${property}${choice.name[0].toUpperCase()}${choice.name.slice(1)}`;
+          if (this._json[choiceProperty] != null || this._json[`_${choiceProperty}`] != null) {
+            property = choiceProperty;
+            typeSpecifier = choice;
+            break;
+          }
+        }
+      }
+    }
+
+    if (typeSpecifier.namespace === 'System') {
       // TODO: If there is a suffix, we need to drill into the CQL system type!
       if (suffix != null) {
         console.error(`Traversing into CQL system types isn't supported: ${this._typeInfo.name}.${root}.${suffix}.`);
         return;
       }
-      return toSystemObject(this._json[root], element.typeSpecifier.name);
+      return toSystemObject(this._json[property], typeSpecifier.name);
     }
 
-    const data = getPropertyFromJSON(this._json, root, element.typeSpecifier, this._modelInfo);
+    const data = getPropertyFromJSON(this._json, property, typeSpecifier, this._modelInfo);
     if (data == null) {
       // preserve distinction between null or undefined
       return data;
     }
 
-    return toFHIRObject(data, element.typeSpecifier, this._modelInfo, suffix);
+    return toFHIRObject(data, typeSpecifier, this._modelInfo, suffix);
   }
 
   // Required by cql-execution API (starting w/ 1.2.1)
@@ -206,10 +223,11 @@ class Patient extends FHIRObject {
 function getPropertyFromJSON(json, property, typeSpecifier, modelInfo) {
   const value = json[property];
   const extra = json[`_${property}`];
-  if (json[property] == null && json[`_${property}`] == null) {
+  if (value == null && extra == null) {
     return json[property];
   }
-  // Special handing for FHIR ids and extensions on primitives.
+
+  // Special handling for FHIR ids and extensions on primitives.
   if (isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo)) {
     // Normalize (or copy) to arrays to better share code between lists and non-lists
     const valueArr = (typeSpecifier.isList && Array.isArray(value)) ? [...value] : [value];
@@ -252,7 +270,7 @@ function isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo) {
     // The FHIR modelinfo represents code elements as a unique class type with a single string 'value'.
     // e.g., Goal's 'status' element has type 'GoalStatus', which just has a string value element.
     const typeInfo = modelInfo.findClass(typeSpecifier.fqn);
-    if (typeInfo && typeInfo.baseType === 'FHIR.Element' && typeInfo.elements.length === 1) {
+    if (typeInfo && typeInfo.baseTypeSpecifier && typeInfo.baseTypeSpecifier.fqn === 'FHIR.Element' && typeInfo.elements.length === 1) {
       const property = typeInfo.findElement('value');
       return property && property.typeSpecifier.fqn === 'System.String';
     }

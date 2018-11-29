@@ -54,7 +54,7 @@ describe('#STU3', () => {
     expect(pt.get('birthDate.value')).to.deep.equal(new cql.DateTime.parse('1975-02-25').getDate());
   });
 
-  it.skip('should find patient extensions', () =>{
+  it('should find patient extensions', () =>{
     const pt = patientSource.currentPatient();
     const extensions = pt.get('extension');
     expect(extensions).to.have.length(11);
@@ -72,7 +72,7 @@ describe('#STU3', () => {
         },
         {
           url: 'text',
-          value: 'White'
+          value: { value: 'White' }
         }
       ]
     });
@@ -145,7 +145,7 @@ describe('#STU3', () => {
     expect(birthDate).to.deep.equal(cql.DateTime.parse('1975-02-25').getDate());
   });
 
-  it.skip('should support getting times', () => {
+  it('should support getting times', () => {
     const pt = patientSource.currentPatient();
     const observation = pt.findRecords('Observation').find(p => p.getId() === '9c15c801-6bb5-47a7-a9db-8bad0cb6aa68');
     const valueTime = observation.get('value.value');
@@ -153,14 +153,14 @@ describe('#STU3', () => {
     expect(valueTime).to.deep.equal(cql.DateTime.parse('0000-01-01T18:23:47.376-05:00').getTime());
   });
 
-  it.skip('should support getting an option of a choice', () => {
+  it('should support getting an option of a choice', () => {
     const pt = patientSource.currentPatient();
-    const condition = pt.findRecords('Condition').find(p => p.getId() === '3c57b73b-6f28-45e7-9729-b681a1ec4156');
-    // In DSTU2, you just fully spell out the choice (e.g., onset[x] datetime is retrieved as onsetDateTime)
-    expect(condition.get('onsetDateTime.value')).to.deep.equal(cql.DateTime.parse('1994-07-19T09:18:56-04:00'));
+    const condition = pt.findRecords('Condition').find(p => p.getId() === '9aae38e5-44ff-4f6e-8228-4898cdfa0833');
+    // In STU3, you use the stub of the choice (e.g., onset[x] datetime is retrieved as onset)
+    expect(condition.get('onset.value')).to.deep.equal(cql.DateTime.parse('1994-07-19T09:18:56-04:00'));
   });
 
-  it.skip('should support id and extension on primitives', () => {
+  it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
     const goal = pt.findRecords('Goal').find(p => p.getId() === '1ed18813-c964-4f2d-8467-d8b351fe051c');
     expect(goal.get('status.id')).to.equal('12345');

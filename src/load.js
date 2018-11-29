@@ -43,6 +43,8 @@ class ModelInfo {
     this._patientClassName = xml.$.patientClassName;
     this._patientClassIdentifier = xml.$.patientClassIdentifier;
     this._patientBirthDatePropertyName = xml.$.patientBirthDatePropertyName;
+    this._caseSensitive = xml.$.caseSensitive;
+    this._strictRetrieveTyping = xml.$.strictRetrieveTyping;
     this._classesByLabel = new Map();
     this._classesByIdentifier = new Map();
     this._classesByName = new Map();
@@ -71,6 +73,8 @@ class ModelInfo {
   get patientClassName() { return this._patientClassName; }
   get patientClassIdentifier() { return this._patientClassIdentifier; }
   get patientBirthDatePropertyName() { return this._patientBirthDatePropertyName; }
+  get caseSensitive() { return this._caseSensitive; }
+  get strictRetrieveTyping() { return this._strictRetrieveTyping; }
 
   findClass(klass) {
     // First check label, then identifier, then name
@@ -97,12 +101,13 @@ class ModelInfo {
 
 class ClassInfo {
   constructor(xml, modelInfo) {
+    this._namespace = xml.$.namespace;
     this._name = xml.$.name;
     this._identifier = xml.$.identifier;
     this._label = xml.$.label;
     this._isRetrievable = xml.$.retrievable == 'true';
     this._primaryCodePath = xml.$.primaryCodePath;
-    this._baseType = xml.$.baseType;
+    this._baseTypeSpecifier = getTypeSpecifierFromXML(xml, 'base');
     this._modelInfo = modelInfo;
     this._elementsByName = new Map();
     if (xml.element != null) {
@@ -118,14 +123,14 @@ class ClassInfo {
   get label() { return this._label; }
   get isRetrievable() { return this._isRetrievable; }
   get primaryCodePath() { return this._primaryCodePath; }
-  get baseType() { return this._baseType; }
+  get baseTypeSpecifier() { return this._baseTypeSpecifier; }
   get elements() { return Array.from(this._elementsByName.values()); }
 
   findElement(el) {
     let element = this._elementsByName.get(el);
     // TODO: Should we add support for when the base type is a System type?
-    if (element == null && this.baseType != null && !this.baseType.startsWith('System.')) {
-      element = this._modelInfo.findClass(this.baseType).findElement(el);
+    if (element == null && this.baseTypeSpecifier != null && this.baseTypeSpecifier.namespace !== 'System') {
+      element = this._modelInfo.findClass(this.baseTypeSpecifier.fqn).findElement(el);
     }
     return element;
   }
@@ -134,8 +139,9 @@ class ClassInfo {
 class ClassElement {
   constructor(xml, modelInfo) {
     this._name = xml.$.name;
-    this._typeSpecifier = getTypeSpecifierFromXML(xml);
+    this._typeSpecifier = getTypeSpecifierFromXML(xml, '', 'element');
     this._isProhibited = xml.$.prohibited == 'true';
+    this._isOneBased = xml.$.oneBased === 'true';
     this._modelInfo = modelInfo;
   }
 
@@ -156,19 +162,6 @@ class NamedTypeSpecifier {
   get name() { return this._name; }
   get namespace() { return this._namespace; }
   get fqn() { return this.namespace == null ? this.name : `${this.namespace}.${this.name}`; }
-
-  static fromXML(xml) {
-    if (xmlHasTypeMatch(xml, NAMED_TYPE_RE)) {
-      const m = NAMED_TYPE_RE.exec(xml.$.type);
-      return new NamedTypeSpecifier(m[3], m[2]);
-    } else if (xmlHasTypeSpecifierMatch(xml, NAMED_TYPE_NAME)) {
-      const typeSpecifier = xml.typeSpecifier[0];
-      const name = typeSpecifier.$.name;
-      const namespace = typeSpecifier.$.modelName || typeSpecifier.$.namespace;
-      return new NamedTypeSpecifier(name, namespace);
-    }
-    return;
-  }
 }
 
 const LIST_TYPE_NAME = 'ListTypeSpecifier';
@@ -180,20 +173,6 @@ class ListTypeSpecifier {
 
   get isList() { return true; }
   get elementType() { return this._elementType; }
-
-  static fromXML(xml) {
-    if (xmlHasTypeMatch(xml, LIST_TYPE_RE)) {
-      const m = LIST_TYPE_RE.exec(xml.$.type);
-      return new ListTypeSpecifier(getTypeSpecifierFromXML({ $: { type: m[1] } }));
-    } else if (xmlHasTypeSpecifierMatch(xml, LIST_TYPE_NAME)) {
-      const typeSpecifier = xml.typeSpecifier[0];
-      return new ListTypeSpecifier(getTypeSpecifierFromXML({
-        $: { type: typeSpecifier.$.elementType },
-        typeSpecifier: typeSpecifier.elementTypeSpecifier
-      }));
-    }
-    return;
-  }
 }
 
 const INTERVAL_TYPE_NAME = 'IntervalTypeSpecifier';
@@ -205,20 +184,6 @@ class IntervalTypeSpecifier {
 
   get isInterval() { return true; }
   get pointType() { return this._pointType; }
-
-  static fromXML(xml) {
-    if (xmlHasTypeMatch(xml, INTERVAL_TYPE_RE)) {
-      const m = INTERVAL_TYPE_RE.exec(xml.$.type);
-      return new IntervalTypeSpecifier(getTypeSpecifierFromXML({ $: { type: m[1] } }));
-    } else if (xmlHasTypeSpecifierMatch(xml, INTERVAL_TYPE_NAME)) {
-      const typeSpecifier = xml.typeSpecifier[0];
-      return new IntervalTypeSpecifier(getTypeSpecifierFromXML({
-        $: { type: typeSpecifier.$.pointType },
-        typeSpecifier: typeSpecifier.pointTypeSpecifier
-      }));
-    }
-    return;
-  }
 }
 
 const CHOICE_TYPE_NAME = 'ChoiceTypeSpecifier';
@@ -229,43 +194,64 @@ class ChoiceTypeSpecifier {
   }
 
   get isChoice() { return true; }
-  get choices() { return this._pointType; }
+  get choices() { return this._choices; }
+}
 
-  static fromXML(xml) {
-    if (xmlHasTypeMatch(xml, CHOICE_TYPE_RE)) {
-      // NOTE: The type attribute variant does not support choices nested in choices
-      const m = INTERVAL_TYPE_RE.exec(xml.$.type);
-      const choiceStrings = m[1].split(',').map(c => c.trim());
-      const choices = choiceStrings.map(c => getTypeSpecifierFromXML({ $: { type: c } }));
-      return new ChoiceTypeSpecifier(choices);
-    } else if (xmlHasTypeSpecifierMatch(xml, CHOICE_TYPE_NAME)) {
-      const typeSpecifier = xml.typeSpecifier[0];
-      const choices = typeSpecifier.choice.map(c => getTypeSpecifierFromXML({
-        typeSpecifier: c
-      }));
-      return new ChoiceTypeSpecifier(choices);
+function getTypeSpecifierFromXML(xml, ...prefixes) {
+  let type, typeSpecifier;
+
+  // loop through prefixes looking for type property (e.g., type, elementType, pointType, etc.)
+  if (xml.$) {
+    for (let i=0; type == null && i < prefixes.length; i++) {
+      type = prefixes[i] === '' ? xml.$.type : xml.$[`${prefixes[i]}Type`];
     }
-    return;
   }
+
+  // loop through prefixes looking for typeSpecifier property (e.g., typeSpecifier, elementTypeSpecifier, etc.)
+  for (let i=0; typeSpecifier == null && i < prefixes.length; i++) {
+    typeSpecifier = prefixes[i] === '' ? xml.typeSpecifier : xml[`${prefixes[i]}TypeSpecifier`];
+  }
+  if (typeSpecifier && typeSpecifier.length > 0) {
+    typeSpecifier = typeSpecifier[0];
+  }
+
+  return getTypeSpecifier(type, typeSpecifier);
 }
 
-function xmlHasTypeMatch(xml, typeRegex) {
-  return xml.$ && xml.$.type && typeRegex.test(xml.$.type);
-}
-
-function xmlHasTypeSpecifierMatch(xml, typeSpecifierName) {
-  return xml.typeSpecifier && xml.typeSpecifier.length === 1 && xml.typeSpecifier[0].$.type === typeSpecifierName;
-}
-
-function getTypeSpecifierFromXML(xml) {
-  if (xmlHasTypeMatch(xml, NAMED_TYPE_RE) || xmlHasTypeSpecifierMatch(xml, NAMED_TYPE_NAME)) {
-    return NamedTypeSpecifier.fromXML(xml);
-  } else if (xmlHasTypeMatch(xml, LIST_TYPE_RE) || xmlHasTypeSpecifierMatch(xml, LIST_TYPE_NAME)) {
-    return ListTypeSpecifier.fromXML(xml);
-  } else if (xmlHasTypeMatch(xml, INTERVAL_TYPE_RE) || xmlHasTypeSpecifierMatch(xml, INTERVAL_TYPE_NAME)) {
-    return IntervalTypeSpecifier.fromXML(xml);
-  } else if (xmlHasTypeMatch(xml, CHOICE_TYPE_RE) || xmlHasTypeSpecifierMatch(xml, CHOICE_TYPE_NAME)) {
-    return ChoiceTypeSpecifier.fromXML(xml);
+function getTypeSpecifier(stringType, xmlTypeSpecifier) {
+  // NamedTypeSpecifier
+  if (stringType && NAMED_TYPE_RE.test(stringType)) {
+    const m = NAMED_TYPE_RE.exec(stringType);
+    return new NamedTypeSpecifier(m[3], m[2]);
+  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === NAMED_TYPE_NAME) {
+    const name = xmlTypeSpecifier.$.name;
+    const namespace = xmlTypeSpecifier.$.modelName || xmlTypeSpecifier.$.namespace;
+    return new NamedTypeSpecifier(name, namespace);
+  }
+  // ListTypeSpecifier
+  else if (stringType && LIST_TYPE_RE.test(stringType)) {
+    const m = LIST_TYPE_RE.exec(stringType);
+    return new ListTypeSpecifier(getTypeSpecifier(m[1]));
+  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === LIST_TYPE_NAME) {
+    return new ListTypeSpecifier(getTypeSpecifierFromXML(xmlTypeSpecifier, 'element'));
+  }
+  // IntervalTypeSpecifier
+  else if (stringType && INTERVAL_TYPE_RE.test(stringType)) {
+    const m = INTERVAL_TYPE_RE.exec(stringType);
+    return new IntervalTypeSpecifier(getTypeSpecifier(m[1]));
+  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === INTERVAL_TYPE_NAME) {
+    return new IntervalTypeSpecifier(getTypeSpecifierFromXML(xmlTypeSpecifier, 'point'));
+  }
+  // ChoiceTypeSpecifier
+  else if (stringType && CHOICE_TYPE_RE.test(stringType)) {
+    // NOTE: The string type attribute variant does not support choices nested in choices
+    const m = INTERVAL_TYPE_RE.exec(stringType);
+    const choiceStrings = m[1].split(',').map(c => c.trim());
+    const choices = choiceStrings.map(c => getTypeSpecifier(c));
+    return new ChoiceTypeSpecifier(choices);
+  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === CHOICE_TYPE_NAME) {
+    const choices = xmlTypeSpecifier.choice.map(c => getTypeSpecifier(null, c));
+    return new ChoiceTypeSpecifier(choices);
   }
   return;
 }
