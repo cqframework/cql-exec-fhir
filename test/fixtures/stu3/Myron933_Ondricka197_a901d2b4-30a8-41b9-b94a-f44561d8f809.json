@@ -218,7 +218,13 @@
               }
             ],
             "line": [
-              "172 O'Keefe Station"
+              "172 O'Keefe Station",
+              "Floor 5",
+              "Apt. C"
+            ],
+            "_line": [
+              null,
+              { "id": "2468" }
             ],
             "city": "Westwood",
             "state": "Massachusetts",
@@ -409,8 +415,12 @@
         "resourceType": "Goal",
         "id": "1ed18813-c964-4f2d-8467-d8b351fe051c",
         "status": "in-progress",
-        "description": {
-          "text": "Hemoglobin A1c total in Blood < 7.0"
+        "_status": {
+          "id": "12345",
+          "extension" : [ {
+             "url" : "http://example.org/fhir/StructureDefinition/originalText",
+             "valueCode" : "progressing"
+          }]
         }
       }
     },
@@ -8099,6 +8109,33 @@
           "system": "urn:iso:std:iso:4217",
           "code": "USD"
         }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:9c15c801-6bb5-47a7-a9db-8bad0cb6aa68",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "9c15c801-6bb5-47a7-a9db-8bad0cb6aa68",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://example.org",
+              "code": "1234-5",
+              "display": "Observation With Time Value"
+            }
+          ],
+          "text": "Observation With Time Value"
+        },
+        "subject": {
+          "reference": "urn:uuid:d02dafab-dd3b-43cf-ae5b-c29b9789cb1c"
+        },
+        "context": {
+          "reference": "urn:uuid:8b2c3b41-670c-4660-8b7f-b0142b9b352e"
+        },
+        "effectiveDateTime": "2009-03-01T08:18:56-05:00",
+        "issued": "2009-03-01T08:18:56.555-05:00",
+        "valueTime": "18:23:47.376-05:00"
       }
     }
   ]
