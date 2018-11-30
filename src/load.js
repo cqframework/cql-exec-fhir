@@ -259,8 +259,7 @@ function stripNS(str) {
   if (str == null) {
     return str;
   }
-  const lastColon = str.lastIndexOf(':');
-  return lastColon === -1 ? str : str.slice(lastColon+1);
+  return str.replace(/.*:/, '');
 }
 
 module.exports = load;

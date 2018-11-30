@@ -179,7 +179,7 @@ class FHIRObject {
 class Patient extends FHIRObject {
   constructor(bundle, modelInfo) {
     const patientClass = modelInfo.patientClassIdentifier ? modelInfo.patientClassIdentifier : modelInfo.patientClassName;
-    const resourceType = modelInfo.patientClassName.startsWith('FHIR.') ? modelInfo.patientClassName.substring(5) : modelInfo.patientClassName;
+    const resourceType = modelInfo.patientClassName.replace(/^FHIR\./, '');
     const ptEntry = bundle.entry.find(e => e.resource && e.resource.resourceType == resourceType);
     const ptClass = modelInfo.findClass(patientClass);
     super(ptEntry.resource, ptClass, modelInfo);
@@ -200,7 +200,7 @@ class Patient extends FHIRObject {
       console.error(`Failed to find type info for ${profile}`);
       return [];
     }
-    const resourceType = classInfo.name.startsWith('FHIR.') ? classInfo.name.substring(5) : classInfo.name;
+    const resourceType = classInfo.name.replace(/^FHIR\./, '');
     const records = this._bundle.entry.filter( e => {
       return e.resource && e.resource.resourceType == resourceType;
     }).map( e => {
@@ -368,15 +368,18 @@ function toCode(f) {
 
   if (Array.isArray(f)) {
     return f.map(c => toCode(c));
-  } else if (f.getTypeInfo().name == 'FHIR.CodeableConcept') {
+  }
+  const typeName = f.getTypeInfo().name.replace(/^FHIR\./, '');
+  if (typeName === 'CodeableConcept') {
     if (f.coding == null) {
       // preserve distinction between null or undefined
       return f.coding;
     } else {
-      return f.coding.map(c => toCode(c));
+      const codings = f.coding.map(c => toCode(c));
+      return codings.length === 1 ? codings[0] : codings;
     }
-  } else if (f.getTypeInfo().name == 'FHIR.Coding') {
-    return new cql.Code(f.code.value, f.system ? f.system.value : f.system, f.version ? f.version.value : f.version);
+  } else if (typeName === 'Coding') {
+    return new cql.Code(f.code.value, f.system ? f.system.value : f.system, f.version ? f.version.value : f.version, f.display ? f.display.value : f.display);
   }
   return new cql.Code(f.code.value);
 }

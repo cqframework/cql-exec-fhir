@@ -118,6 +118,48 @@ describe('#STU3', () => {
     expect(paymentReconciliation).to.be.undefined;
   });
 
+  it('should support getId', () => {
+    const pt = patientSource.currentPatient();
+    const procedure = pt.findRecords('Procedure').find(p => p.getId() === 'f38a480b-f352-4c1f-aca2-b6612a110530');
+    expect(procedure.getId()).to.equal('f38a480b-f352-4c1f-aca2-b6612a110530');
+  });
+
+  it('should support getCode', () => {
+    const pt = patientSource.currentPatient();
+    const procedure = pt.findRecords('Procedure').find(p => p.getId() === 'f38a480b-f352-4c1f-aca2-b6612a110530');
+    expect(procedure.getCode('code')).to.deep.equal(new cql.Code('117015009', 'http://snomed.info/sct', undefined, 'Throat culture (procedure) '));
+  });
+
+  it('should support getDate (DateTime)', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('MedicationRequest').find(p => p.getId() === 'a87a2346-f826-40db-95ff-0660786460c0');
+    const periodStart = condition.getDate('authoredOn.value');
+    expect(periodStart.isDateTime).to.be.true;
+    expect(periodStart).to.deep.equal(cql.DateTime.parse('2008-11-11T08:18:56-05:00'));
+  });
+
+  it('should support getDate (Date)', () => {
+    const pt = patientSource.currentPatient();
+    const birthDate = pt.getDate('birthDate.value');
+    expect(birthDate.isDate).to.be.true;
+    expect(birthDate).to.deep.equal(cql.DateTime.parse('1975-02-25').getDate());
+  });
+
+  it('should support getDateOrInterval (DateTime)', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('MedicationRequest').find(p => p.getId() === 'a87a2346-f826-40db-95ff-0660786460c0');
+    const periodStart = condition.getDateOrInterval('authoredOn.value');
+    expect(periodStart.isDateTime).to.be.true;
+    expect(periodStart).to.deep.equal(cql.DateTime.parse('2008-11-11T08:18:56-05:00'));
+  });
+
+  it('should support getDateOrInterval (Date)', () => {
+    const pt = patientSource.currentPatient();
+    const birthDate = pt.getDateOrInterval('birthDate.value');
+    expect(birthDate.isDate).to.be.true;
+    expect(birthDate).to.deep.equal(cql.DateTime.parse('1975-02-25').getDate());
+  });
+
   it('should support dot-separated-paths', () => {
     const pt = patientSource.currentPatient();
     const procedure = pt.findRecords('Procedure').find(p => p.getId() === 'f38a480b-f352-4c1f-aca2-b6612a110530');

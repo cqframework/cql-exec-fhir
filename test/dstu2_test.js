@@ -114,6 +114,50 @@ describe('#DSTU2', () => {
     expect(paymentReconciliation).to.be.undefined;
   });
 
+  it('should support getId', () => {
+    const pt = patientSource.currentPatient();
+    const procedure = pt.findRecords('Procedure').find(p => p.getId() === '9d6f2ff7-f7f2-4dbb-a271-8a8c3c501e18');
+    expect(procedure.getId()).to.equal('9d6f2ff7-f7f2-4dbb-a271-8a8c3c501e18');
+  });
+
+  it('should support getCode', () => {
+    const pt = patientSource.currentPatient();
+    const procedure = pt.findRecords('Procedure').find(p => p.getId() === '9d6f2ff7-f7f2-4dbb-a271-8a8c3c501e18');
+    expect(procedure.getCode('code')).to.deep.equal(new cql.Code('117015009', 'http://snomed.info/sct', undefined, 'Throat culture (procedure) '));
+  });
+
+  it('should support getDate (DateTime)', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('Encounter').find(p => p.getId() === 'df950a26-42f3-4db1-93b5-50ba3cec264e');
+    const periodStart = condition.getDate('period.start.value');
+    expect(periodStart.isDateTime).to.be.true;
+    expect(periodStart).to.deep.equal(cql.DateTime.parse('1994-07-19T09:18:56-04:00'));
+  });
+
+  it('should support getDate (Date)', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('Condition').find(p => p.getId() === '3c57b73b-6f28-45e7-9729-b681a1ec4156');
+    const dateRecorded = condition.getDate('dateRecorded.value');
+    expect(dateRecorded.isDate).to.be.true;
+    expect(dateRecorded).to.deep.equal(cql.DateTime.parse('1994-07-19').getDate());
+  });
+
+  it('should support getDateOrInterval (DateTime)', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('Encounter').find(p => p.getId() === 'df950a26-42f3-4db1-93b5-50ba3cec264e');
+    const periodStart = condition.getDateOrInterval('period.start.value');
+    expect(periodStart.isDateTime).to.be.true;
+    expect(periodStart).to.deep.equal(cql.DateTime.parse('1994-07-19T09:18:56-04:00'));
+  });
+
+  it('should support getDateOrInterval (Date)', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('Condition').find(p => p.getId() === '3c57b73b-6f28-45e7-9729-b681a1ec4156');
+    const dateRecorded = condition.getDateOrInterval('dateRecorded.value');
+    expect(dateRecorded.isDate).to.be.true;
+    expect(dateRecorded).to.deep.equal(cql.DateTime.parse('1994-07-19').getDate());
+  });
+
   it('should support dot-separated-paths', () => {
     const pt = patientSource.currentPatient();
     const procedure = pt.findRecords('Procedure').find(p => p.getId() === '9d6f2ff7-f7f2-4dbb-a271-8a8c3c501e18');
