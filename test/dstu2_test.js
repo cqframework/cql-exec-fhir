@@ -78,12 +78,30 @@ describe('#DSTU2', () => {
     });
   });
 
-  it('should find records by type', () =>{
+  it('should find records by type name (e.g., Condition)', () =>{
     const pt = patientSource.currentPatient();
     const conditions = pt.findRecords('Condition');
     expect(conditions).to.have.length(9);
     expect(conditions.every(c => c.getTypeInfo().name === 'FHIR.Condition')).to.be.true;
     const paymentReconciliations = pt.findRecords('PaymentReconciliation');
+    expect(paymentReconciliations.length).to.be.empty;
+  });
+
+  it('should find records by model name and type name (e.g., FHIR.Condition)', () =>{
+    const pt = patientSource.currentPatient();
+    const conditions = pt.findRecords('FHIR.Condition');
+    expect(conditions).to.have.length(9);
+    expect(conditions.every(c => c.getTypeInfo().name === 'FHIR.Condition')).to.be.true;
+    const paymentReconciliations = pt.findRecords('FHIR.PaymentReconciliation');
+    expect(paymentReconciliations.length).to.be.empty;
+  });
+
+  it('should find records by model URL and type name (e.g., {http://hl7.org/fhir}Condition)', () =>{
+    const pt = patientSource.currentPatient();
+    const conditions = pt.findRecords('{http://hl7.org/fhir}Condition');
+    expect(conditions).to.have.length(9);
+    expect(conditions.every(c => c.getTypeInfo().name === 'FHIR.Condition')).to.be.true;
+    const paymentReconciliations = pt.findRecords('{http://hl7.org/fhir}PaymentReconciliation');
     expect(paymentReconciliations.length).to.be.empty;
   });
 

@@ -16,8 +16,7 @@ function load(filePathOrXML) {
   const opts = {
     async: false,
     tagNameProcessors: [processors.stripPrefix],
-    attrNameProcessors: [processors.stripPrefix],
-    attrValueProcessors: [processors.stripPrefix]
+    attrNameProcessors: [processors.stripPrefix]
   };
   xml2js.parseString(xml, opts, (err, result) => {
     if (err != null) {
@@ -50,7 +49,7 @@ class ModelInfo {
     this._classesByName = new Map();
 
     for (const t of xml.typeInfo) {
-      if (t.$ != null && (t.$.type.endsWith('ClassInfo') || t.$.type.endsWith('ProfileInfo'))) {
+      if (t.$ != null && (stripNS(t.$.type) === 'ClassInfo' || stripNS(t.$.type) === 'ProfileInfo')) {
         const classInfo = new ClassInfo(t, this);
         if (classInfo.label != null) {
           this._classesByLabel.set(classInfo.label, classInfo);
@@ -203,7 +202,7 @@ function getTypeSpecifierFromXML(xml, ...prefixes) {
   // loop through prefixes looking for type property (e.g., type, elementType, pointType, etc.)
   if (xml.$) {
     for (let i=0; type == null && i < prefixes.length; i++) {
-      type = prefixes[i] === '' ? xml.$.type : xml.$[`${prefixes[i]}Type`];
+      type = prefixes[i] === '' ? stripNS(xml.$.type) : stripNS(xml.$[`${prefixes[i]}Type`]);
     }
   }
 
@@ -223,7 +222,7 @@ function getTypeSpecifier(stringType, xmlTypeSpecifier) {
   if (stringType && NAMED_TYPE_RE.test(stringType)) {
     const m = NAMED_TYPE_RE.exec(stringType);
     return new NamedTypeSpecifier(m[3], m[2]);
-  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === NAMED_TYPE_NAME) {
+  } else if (xmlTypeSpecifier && stripNS(xmlTypeSpecifier.$.type) === NAMED_TYPE_NAME) {
     const name = xmlTypeSpecifier.$.name;
     const namespace = xmlTypeSpecifier.$.modelName || xmlTypeSpecifier.$.namespace;
     return new NamedTypeSpecifier(name, namespace);
@@ -232,14 +231,14 @@ function getTypeSpecifier(stringType, xmlTypeSpecifier) {
   else if (stringType && LIST_TYPE_RE.test(stringType)) {
     const m = LIST_TYPE_RE.exec(stringType);
     return new ListTypeSpecifier(getTypeSpecifier(m[1]));
-  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === LIST_TYPE_NAME) {
+  } else if (xmlTypeSpecifier && stripNS(xmlTypeSpecifier.$.type) === LIST_TYPE_NAME) {
     return new ListTypeSpecifier(getTypeSpecifierFromXML(xmlTypeSpecifier, 'element'));
   }
   // IntervalTypeSpecifier
   else if (stringType && INTERVAL_TYPE_RE.test(stringType)) {
     const m = INTERVAL_TYPE_RE.exec(stringType);
     return new IntervalTypeSpecifier(getTypeSpecifier(m[1]));
-  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === INTERVAL_TYPE_NAME) {
+  } else if (xmlTypeSpecifier && stripNS(xmlTypeSpecifier.$.type) === INTERVAL_TYPE_NAME) {
     return new IntervalTypeSpecifier(getTypeSpecifierFromXML(xmlTypeSpecifier, 'point'));
   }
   // ChoiceTypeSpecifier
@@ -249,11 +248,19 @@ function getTypeSpecifier(stringType, xmlTypeSpecifier) {
     const choiceStrings = m[1].split(',').map(c => c.trim());
     const choices = choiceStrings.map(c => getTypeSpecifier(c));
     return new ChoiceTypeSpecifier(choices);
-  } else if (xmlTypeSpecifier && xmlTypeSpecifier.$.type === CHOICE_TYPE_NAME) {
+  } else if (xmlTypeSpecifier && stripNS(xmlTypeSpecifier.$.type) === CHOICE_TYPE_NAME) {
     const choices = xmlTypeSpecifier.choice.map(c => getTypeSpecifier(null, c));
     return new ChoiceTypeSpecifier(choices);
   }
   return;
+}
+
+function stripNS(str) {
+  if (str == null) {
+    return str;
+  }
+  const lastColon = str.lastIndexOf(':');
+  return lastColon === -1 ? str : str.slice(lastColon+1);
 }
 
 module.exports = load;
