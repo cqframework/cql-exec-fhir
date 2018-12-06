@@ -17,7 +17,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns4:element name="period" type="FHIR.Period"/>
     </ns4:typeInfo>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="FHIR.date" retrievable="false" baseType="FHIR.Element">
-        <ns4:element name="value" type="System.DateTime"/>
+        <ns4:element name="value" type="System.Date"/>
     </ns4:typeInfo>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="FHIR.DetectedIssue.Mitigation" retrievable="false" baseType="FHIR.BackboneElement">
         <ns4:element name="action" type="FHIR.CodeableConcept"/>
@@ -3625,7 +3625,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns4:element name="entity" type="FHIR.Reference"/>
         <ns4:element name="role" type="list&lt;FHIR.CodeableConcept&gt;"/>
     </ns4:typeInfo>
-    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="FHIR.MedicationStatement" retrievable="true" baseType="FHIR.DomainResource">
+    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="FHIR.MedicationStatement" retrievable="true" primaryCodePath="medicationCodeableConcept" baseType="FHIR.DomainResource">
         <ns4:element name="identifier" type="list&lt;FHIR.Identifier&gt;"/>
         <ns4:element name="patient" type="FHIR.Reference"/>
         <ns4:element name="informationSource" type="FHIR.Reference"/>
@@ -3886,7 +3886,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <ns4:conversionInfo fromType="FHIR.Period" toType="Interval&lt;System.DateTime&gt;" functionName="FHIRHelpers.ToInterval"/>
     <ns4:conversionInfo fromType="FHIR.Range" toType="Interval&lt;System.Quantity&gt;" functionName="FHIRHelpers.ToInterval"/>
     <ns4:conversionInfo fromType="FHIR.dateTime" toType="System.DateTime" functionName="FHIRHelpers.ToDateTime"/>
-    <ns4:conversionInfo fromType="FHIR.date" toType="System.DateTime" functionName="FHIRHelpers.ToDateTime"/>
+    <ns4:conversionInfo fromType="FHIR.date" toType="System.Date" functionName="FHIRHelpers.ToDate"/>
     <ns4:conversionInfo fromType="FHIR.uuid" toType="System.String" functionName="FHIRHelpers.ToString"/>
     <ns4:conversionInfo fromType="FHIR.ProvenanceEntityRole" toType="System.String" functionName="FHIRHelpers.ToString"/>
     <ns4:conversionInfo fromType="FHIR.UnitsOfTime" toType="System.String" functionName="FHIRHelpers.ToString"/>
