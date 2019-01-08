@@ -220,6 +220,22 @@ describe('#STU3', () => {
     expect(condition.get('onset.value')).to.deep.equal(cql.DateTime.parse('1994-07-19T09:18:56-04:00'));
   });
 
+  it('should support getting an option of a choice using explicit name', () => {
+    // This is needed because the ModelInfo indicates MedicationRequest's primaryCodePath as medicationCodeableConcept!
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('MedicationRequest').find(p => p.getId() === 'a87a2346-f826-40db-95ff-0660786460c0');
+    const code = condition.getCode('medicationCodeableConcept');
+    expect(code).to.deep.equal(new cql.Code('308192', 'http://www.nlm.nih.gov/research/umls/rxnorm', undefined, 'Amoxicillin 500 MG Oral Tablet'));
+  });
+
+  it('should not return wrong type if explicit choice name was requested but data used different type', () => {
+    // This is needed because the ModelInfo indicates MedicationRequest's primaryCodePath as medicationCodeableConcept!
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecords('MedicationRequest').find(p => p.getId() === 'a87a2346-f826-40db-95ff-0660786460c0');
+    const code = condition.getCode('medicationReference');
+    expect(code).to.be.undefined;
+  });
+
   it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
     const goal = pt.findRecords('Goal').find(p => p.getId() === '1ed18813-c964-4f2d-8467-d8b351fe051c');

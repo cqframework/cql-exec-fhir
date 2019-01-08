@@ -125,11 +125,42 @@ class ClassInfo {
   get baseTypeSpecifier() { return this._baseTypeSpecifier; }
   get elements() { return Array.from(this._elementsByName.values()); }
 
-  findElement(el) {
+  /**
+   * Finds an element by name, optionally allowing for explicit choice names. If explicit choice names
+   * are allowed, then if 'medicationCodeableConcept' is passed in, but the real element name is
+   * 'medication' and it is a choice where 'CodeableConcept' is a valid option type, then it will return
+   * that.  If explicit choice names are not allowed, it will return `undefined`.  Technically, explicit
+   * choicenames won't come up often -- likely only when a ModelInfo uses one as its primaryCodePath or
+   * primaryDatePath (and even then, some might consider that a bug in the ModelInfo).
+   * @param {string} el - the name of the element to find
+   * @param {boolean} allowExplicitChoice - indicates if explicit choice names are allowed
+   * @return {ClassElement}
+   */
+  findElement(el, allowExplicitChoice = false) {
     let element = this._elementsByName.get(el);
     // TODO: Should we add support for when the base type is a System type?
     if (element == null && this.baseTypeSpecifier != null && this.baseTypeSpecifier.namespace !== 'System') {
       element = this._modelInfo.findClass(this.baseTypeSpecifier.fqn).findElement(el);
+    }
+    if (element == null && allowExplicitChoice) {
+      // Now go through the name checking possible combinations of name and type for explicit choices
+      // E.g., medicationCodeableConcept -> medication / CodeableConcept -> medicationCodeable / Concept
+      for (let i=0; i < el.length; i++) {
+        if (/^[A-Z]$/.test(el[i])) {
+          const name = el.slice(0, i);
+          const potential = this.findElement(name, false);
+          if (potential != null && potential.typeSpecifier && potential.typeSpecifier.isChoice) {
+            const explicitType = el.slice(i);
+            const typeMatchesChoice = potential.typeSpecifier.choices.find(c => {
+              return c.name === explicitType || c.name === `${explicitType[0].toLowerCase()}${explicitType.slice(1)}`;
+            });
+            if (typeMatchesChoice) {
+              element = potential;
+              break;
+            }
+          }
+        }
+      }
     }
     return element;
   }
