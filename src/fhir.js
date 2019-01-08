@@ -91,24 +91,37 @@ class FHIRObject {
     const parts = field.split('.');
     const root = parts[0];
     const suffix = parts.length > 1 ? parts.splice(1).join('.') : undefined;
-    const element = this._typeInfo.findElement(root);
+    const element = this._typeInfo.findElement(root, true); // true: support explicit choices
     if (typeof element === 'undefined') {
       console.error(`Failed to locate element for ${this._typeInfo.name}.${root}`);
       return;
     }
 
-    let property = root;
-    let typeSpecifier = element.typeSpecifier;
-    // Special handling for choices to find the right value in FHIR (e.g., the property might
-    // be 'value', but in JSON, it's spelled out as 'valueDateTime')
-    if (typeSpecifier.isChoice) {
-      for (const choice of typeSpecifier.choices) {
-        if (choice.isNamed) {
-          const choiceProperty = `${property}${choice.name[0].toUpperCase()}${choice.name.slice(1)}`;
-          if (this._json[choiceProperty] != null || this._json[`_${choiceProperty}`] != null) {
-            property = choiceProperty;
-            typeSpecifier = choice;
-            break;
+    const choicePropertyName = function(element, choice) {
+      return `${element.name}${choice.name[0].toUpperCase()}${choice.name.slice(1)}`;
+    };
+
+    let property, typeSpecifier;
+    if (root !== element.name && element.typeSpecifier.isChoice) {
+      // This only happens when the root was explicit (e.g., medicationCodeableConcept) but the
+      // property is a choice (e.g., medication). In this case we need to find the matchin choice
+      // and use it. We don't want other choices, even if they're in the data.
+      property = root; // keep the explicit name
+      typeSpecifier = element.typeSpecifier.choices.find(c => property === choicePropertyName(element, c));
+    } else {
+      property = element.name;
+      typeSpecifier = element.typeSpecifier;
+      if (typeSpecifier.isChoice) {
+        // Special handling for choices to find the right value in the FHIR data (e.g., the property
+        // might be 'value', but in JSON, it's spelled out as 'valueDateTime').
+        for (const choice of typeSpecifier.choices) {
+          if (choice.isNamed) {
+            const choiceProperty = choicePropertyName(element, choice);
+            if (this._json[choiceProperty] != null || this._json[`_${choiceProperty}`] != null) {
+              property = choiceProperty;
+              typeSpecifier = choice;
+              break;
+            }
           }
         }
       }
