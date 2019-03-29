@@ -7,16 +7,16 @@ describe('#FHIRWrapper_STU3', () => {
   let conditionResource;
   before(() => {
     fhirWrapper = cqlfhir.FHIRWrapper.FHIRv300();
-    conditionResource = require('./fixtures/stu3/Condition_f201.json')
+    conditionResource = require('./fixtures/stu3/Condition_f201.json');
   });
 
   it('should wrap a fhir resource to the correct type when type not specified', () => {
-    let fhirObject = fhirWrapper.wrap(conditionResource)
+    let fhirObject = fhirWrapper.wrap(conditionResource);
     expect(fhirObject.getTypeInfo().name).to.equal('Condition');
   });
 
   it('should wrap a fhir resource to the type specified', () => {
-    let fhirObject = fhirWrapper.wrap(conditionResource, 'Observation')
+    let fhirObject = fhirWrapper.wrap(conditionResource, 'Observation');
     expect(fhirObject.getTypeInfo().name).to.equal('Observation');
   });
 });

@@ -18,8 +18,8 @@ class FHIRWrapper {
 
   wrap(fhirJson, fhirResourceType = null) {
     fhirResourceType = fhirResourceType || fhirJson.resourceType;
-    const typeInfo = this._modelInfo.findClass(fhirResourceType)
-    return new FHIRObject(fhirJson, typeInfo, this._modelInfo)
+    const typeInfo = this._modelInfo.findClass(fhirResourceType);
+    return new FHIRObject(fhirJson, typeInfo, this._modelInfo);
   }
 }
 
