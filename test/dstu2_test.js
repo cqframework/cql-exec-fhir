@@ -2,6 +2,25 @@ const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
 const {expect} = require('chai');
 
+describe('#FHIRWrapper_DSTU2', () => {
+  let fhirWrapper;
+  let conditionResource;
+  before(() => {
+    fhirWrapper = cqlfhir.FHIRWrapper.FHIRv102();
+    conditionResource = require('./fixtures/dstu2/Condition_f201.json')
+  });
+
+  it('should wrap a fhir resource to the correct type when type not specified', () => {
+    let fhirObject = fhirWrapper.wrap(conditionResource)
+    expect(fhirObject.getTypeInfo().name).to.equal('FHIR.Condition');
+  });
+
+  it('should wrap a fhir resource to the type specified', () => {
+    let fhirObject = fhirWrapper.wrap(conditionResource, 'Observation')
+    expect(fhirObject.getTypeInfo().name).to.equal('FHIR.Observation');
+  });
+});
+
 // Placeholder test
 describe('#DSTU2', () => {
   let patientSource;

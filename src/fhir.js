@@ -3,6 +3,26 @@ const load = require('./load');
 const FHIRv102XML = require('./modelInfos/fhir-modelinfo-1.0.2.xml.js');
 const FHIRv300XML = require('./modelInfos/fhir-modelinfo-3.0.0.xml.js');
 
+class FHIRWrapper {
+  constructor(filePathOrXML) {
+    this._modelInfo = load(filePathOrXML);
+  }
+
+  static FHIRv102() {
+    return new FHIRWrapper(FHIRv102XML);
+  }
+
+  static FHIRv300() {
+    return new FHIRWrapper(FHIRv300XML);
+  }
+
+  wrap(fhirJson, fhirResourceType = null) {
+    fhirResourceType = fhirResourceType || fhirJson.resourceType;
+    const typeInfo = this._modelInfo.findClass(fhirResourceType)
+    return new FHIRObject(fhirJson, typeInfo, this._modelInfo)
+  }
+}
+
 class PatientSource {
   constructor(filePathOrXML) {
     this._index = 0;
@@ -397,4 +417,4 @@ function toCode(f) {
   return new cql.Code(f.code.value);
 }
 
-module.exports = { PatientSource };
+module.exports = { PatientSource, FHIRWrapper };

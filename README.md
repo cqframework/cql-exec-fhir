@@ -11,7 +11,7 @@ To use this project, you should perform the following steps:
 2. Install [Yarn](https://yarnpkg.com/en/docs/install)
 3. Execute the following from this project's root directory: `yarn`
 
-# Using the FHIR Data Source
+# Using the FHIR Patient Data Source
 
 The FHIR Data Source expects each patient to be represented as a single FHIR Bundle containing all of the patient's
 relevant data.  The FHIR Data Source does _not_ query FHIR servers, but rather, expects the Bundles to be passed to
@@ -28,6 +28,22 @@ const cqlfhir = require('cql-exec-fhir');
 const patientSource = cqlfhir.PatientSource.FHIRv102(); // or .FHIRv300()
 patientSource.loadBundles([patient01, patient02]);
 const results = executor.exec(patientSource);
+```
+
+# Using the FHIRWrapper
+
+If you are passing in individual fhir resources to the execution engine as parameters, you can use FHIRWrapper
+to convert the raw json FHIR resources into FHIRObjects that work with the execution engine.
+
+Example:
+
+```js
+const cqlfhir = require('cql-exec-fhir');
+const fhirWrapper = cqlfhir.FHIRWrapper.FHIRv300();
+
+const conditionRawResource = { "resourceType": "Condition", "id": "f201", "clinicalStatus": "active", ... }
+const conditionFhirObject = fhirWrapper.wrap(conditionResource)
+// Now conditionFhirObject can be passed into the cql execution engine
 ```
 
 # Linting the Code
