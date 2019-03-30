@@ -130,10 +130,9 @@ class ClassInfo {
   parentClasses() {
     if (!this._parentClasses) {
       this._parentClasses = [];
-      let klass = this;
-      while (klass && klass.baseTypeSpecifier) {
-        klass = this._modelInfo.findClass(klass.baseTypeSpecifier.name);
-        if (klass) this._parentClasses.push(klass);
+      if (this.baseTypeSpecifier) {
+        const parentClass = this._modelInfo.findClass(this.baseTypeSpecifier.name);
+        if (parentClass) this._parentClasses.push(parentClass, ...parentClass.parentClasses());
       }
     }
     return this._parentClasses;
