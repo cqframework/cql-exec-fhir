@@ -32,7 +32,7 @@ const results = executor.exec(patientSource);
 
 # Using the FHIRWrapper
 
-If you are passing in individual fhir resources to the execution engine as parameters, you can use FHIRWrapper
+If you are passing in individual FHIR resources to the execution engine as parameters, you can use FHIRWrapper
 to convert the raw json FHIR resources into FHIRObjects that work with the execution engine.
 
 Example:
