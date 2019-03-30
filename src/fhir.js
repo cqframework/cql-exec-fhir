@@ -17,9 +17,23 @@ class FHIRWrapper {
   }
 
   wrap(fhirJson, fhirResourceType = null) {
-    fhirResourceType = fhirResourceType || fhirJson.resourceType;
-    const typeInfo = this._modelInfo.findClass(fhirResourceType);
-    return new FHIRObject(fhirJson, typeInfo, this._modelInfo);
+    const targetClassName = fhirResourceType || fhirJson.resourceType;
+    const targetClass = this._modelInfo.findClass(targetClassName);
+
+    // If the FHIR resource specifies a type and a target type is specified, verify they are compatible
+    if (fhirResourceType && fhirJson.resourceType) {
+      const currentClass = this._modelInfo.findClass(fhirJson.resourceType);
+      if (!this._typeCastIsAllowed(currentClass, targetClass))
+        throw `Incompatible types: fhir resourceType is ${fhirJson.resourceType} which cannot be cast as ${fhirResourceType}`;
+    }
+
+    return new FHIRObject(fhirJson, targetClass, this._modelInfo);
+  }
+
+  _typeCastIsAllowed(currentClass, targetClass) {
+    return (targetClass == currentClass) ||
+      (currentClass.parentClasses().includes(targetClass)) || // upcasting, safe
+      (targetClass.parentClasses().includes(currentClass)); // downcasting, unsafe but allowed
   }
 }
 
