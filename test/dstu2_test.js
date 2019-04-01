@@ -36,7 +36,7 @@ describe('#FHIRWrapper_DSTU2', () => {
   });
 
   it('should error if requested type is incompatible', () => {
-    expect(function(){fhirWrapper.wrap(conditionResource, 'Observation');}).to.throw('Incompatible types: fhir resourceType is Condition which cannot be cast as Observation');
+    expect(function(){fhirWrapper.wrap(conditionResource, 'Observation');}).to.throw('Incompatible types: FHIR resourceType is Condition which cannot be cast as Observation');
   });
 
   it('should wrap a fhir resource to the type specified if real type unknown', () => {
