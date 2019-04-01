@@ -2,6 +2,49 @@ const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
 const {expect} = require('chai');
 
+describe('#FHIRWrapper_STU3', () => {
+  let fhirWrapper;
+  let conditionResource;
+  let conditionResourceWithNoType;
+  let domainResource;
+  before(() => {
+    fhirWrapper = cqlfhir.FHIRWrapper.FHIRv300();
+    conditionResource = require('./fixtures/stu3/Condition_f201.json');
+    conditionResourceWithNoType = JSON.parse(JSON.stringify(conditionResource));
+    delete conditionResourceWithNoType.resourceType;
+    domainResource = JSON.parse(JSON.stringify(conditionResource));
+    domainResource.resourceType = 'DomainResource';
+  });
+
+  it('should wrap a fhir resource to the correct type when type not specified', () => {
+    let fhirObject = fhirWrapper.wrap(conditionResource);
+    expect(fhirObject.getTypeInfo().name).to.equal('Condition');
+  });
+
+  it('should wrap a fhir resource to the type specified if upcasting', () => {
+    // inheritance is: Condition < DomainResource < Resource
+    let fhirObject = fhirWrapper.wrap(conditionResource, 'DomainResource');
+    expect(fhirObject.getTypeInfo().name).to.equal('DomainResource');
+    fhirObject = fhirWrapper.wrap(conditionResource, 'Resource');
+    expect(fhirObject.getTypeInfo().name).to.equal('Resource');
+  });
+
+  it('should wrap a fhir resource to the type specified if downcasting', () => {
+    // inheritance is: Condition < DomainResource < Resource
+    let fhirObject = fhirWrapper.wrap(domainResource, 'Condition');
+    expect(fhirObject.getTypeInfo().name).to.equal('Condition');
+  });
+
+  it('should error if requested type is incompatible', () => {
+    expect(function(){fhirWrapper.wrap(conditionResource, 'Observation');}).to.throw('Incompatible types: FHIR resourceType is Condition which cannot be cast as Observation');
+  });
+
+  it('should wrap a fhir resource to the type specified if real type unknown', () => {
+    let fhirObject = fhirWrapper.wrap(conditionResourceWithNoType, 'Observation');
+    expect(fhirObject.getTypeInfo().name).to.equal('Observation');
+  });
+});
+
 // Placeholder test
 describe('#STU3', () => {
   let patientSource;

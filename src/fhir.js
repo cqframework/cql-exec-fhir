@@ -3,6 +3,40 @@ const load = require('./load');
 const FHIRv102XML = require('./modelInfos/fhir-modelinfo-1.0.2.xml.js');
 const FHIRv300XML = require('./modelInfos/fhir-modelinfo-3.0.0.xml.js');
 
+class FHIRWrapper {
+  constructor(filePathOrXML) {
+    this._modelInfo = load(filePathOrXML);
+  }
+
+  static FHIRv102() {
+    return new FHIRWrapper(FHIRv102XML);
+  }
+
+  static FHIRv300() {
+    return new FHIRWrapper(FHIRv300XML);
+  }
+
+  wrap(fhirJson, fhirResourceType = null) {
+    const targetClassName = fhirResourceType || fhirJson.resourceType;
+    const targetClass = this._modelInfo.findClass(targetClassName);
+
+    // If the FHIR resource specifies a type and a target type is specified, verify they are compatible
+    if (fhirResourceType && fhirJson.resourceType) {
+      const currentClass = this._modelInfo.findClass(fhirJson.resourceType);
+      if (!this._typeCastIsAllowed(currentClass, targetClass))
+        throw `Incompatible types: FHIR resourceType is ${fhirJson.resourceType} which cannot be cast as ${fhirResourceType}`;
+    }
+
+    return new FHIRObject(fhirJson, targetClass, this._modelInfo);
+  }
+
+  _typeCastIsAllowed(currentClass, targetClass) {
+    return (targetClass == currentClass) ||
+      (currentClass.parentClasses().includes(targetClass)) || // upcasting, safe
+      (targetClass.parentClasses().includes(currentClass)); // downcasting, unsafe but allowed
+  }
+}
+
 class PatientSource {
   constructor(filePathOrXML) {
     this._index = 0;
@@ -397,4 +431,4 @@ function toCode(f) {
   return new cql.Code(f.code.value);
 }
 
-module.exports = { PatientSource };
+module.exports = { PatientSource, FHIRWrapper };

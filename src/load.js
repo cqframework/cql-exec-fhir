@@ -115,6 +115,7 @@ class ClassInfo {
         this._elementsByName.set(element.name, element);
       }
     }
+    this._parentClasses = null; //lazy loaded
   }
 
   get name() { return this._name; }
@@ -124,6 +125,18 @@ class ClassInfo {
   get primaryCodePath() { return this._primaryCodePath; }
   get baseTypeSpecifier() { return this._baseTypeSpecifier; }
   get elements() { return Array.from(this._elementsByName.values()); }
+
+  // @return NamedTypeSpecifier
+  parentClasses() {
+    if (!this._parentClasses) {
+      this._parentClasses = [];
+      if (this.baseTypeSpecifier) {
+        const parentClass = this._modelInfo.findClass(this.baseTypeSpecifier.name);
+        if (parentClass) this._parentClasses.push(parentClass, ...parentClass.parentClasses());
+      }
+    }
+    return this._parentClasses;
+  }
 
   /**
    * Finds an element by name, optionally allowing for explicit choice names. If explicit choice names
