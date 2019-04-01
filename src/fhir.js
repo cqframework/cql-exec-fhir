@@ -24,7 +24,7 @@ class FHIRWrapper {
     if (fhirResourceType && fhirJson.resourceType) {
       const currentClass = this._modelInfo.findClass(fhirJson.resourceType);
       if (!this._typeCastIsAllowed(currentClass, targetClass))
-        throw `Incompatible types: fhir resourceType is ${fhirJson.resourceType} which cannot be cast as ${fhirResourceType}`;
+        throw `Incompatible types: FHIR resourceType is ${fhirJson.resourceType} which cannot be cast as ${fhirResourceType}`;
     }
 
     return new FHIRObject(fhirJson, targetClass, this._modelInfo);
