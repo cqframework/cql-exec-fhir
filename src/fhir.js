@@ -2,6 +2,7 @@ const cql = require('cql-execution');
 const load = require('./load');
 const FHIRv102XML = require('./modelInfos/fhir-modelinfo-1.0.2.xml.js');
 const FHIRv300XML = require('./modelInfos/fhir-modelinfo-3.0.0.xml.js');
+const FHIRv400XML = require('./modelInfos/fhir-modelinfo-4.0.0.xml.js');
 
 class FHIRWrapper {
   constructor(filePathOrXML) {
@@ -14,6 +15,10 @@ class FHIRWrapper {
 
   static FHIRv300() {
     return new FHIRWrapper(FHIRv300XML);
+  }
+
+  static FHIRv400() {
+    return new FHIRWrapper(FHIRv400XML);
   }
 
   wrap(fhirJson, fhirResourceType = null) {
@@ -52,6 +57,11 @@ class PatientSource {
   // Convenience factory method for getting a FHIR 3.0.0 (STU3) Patient Source
   static FHIRv300() {
     return new PatientSource(FHIRv300XML);
+  }
+
+  // Convenience factory method for getting a FHIR 4.0.0 (R4) Patient Source
+  static FHIRv400() {
+    return new PatientSource(FHIRv400XML);
   }
 
   get version() {
