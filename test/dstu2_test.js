@@ -19,20 +19,37 @@ describe('#FHIRWrapper_DSTU2', () => {
   it('should wrap a fhir resource to the correct type when type not specified', () => {
     let fhirObject = fhirWrapper.wrap(conditionResource);
     expect(fhirObject.getTypeInfo().name).to.equal('FHIR.Condition');
+    // Check one Condition property to be sure
+    const dateRecorded = fhirObject.getDate('dateRecorded');
+    expect(dateRecorded.isDate).to.be.true;
+    expect(dateRecorded).to.deep.equal(cql.DateTime.parse('2013-04-04').getDate());
   });
 
   it('should wrap a fhir resource to the type specified if upcasting', () => {
     // inheritance is: Condition < DomainResource < Resource
     let fhirObject = fhirWrapper.wrap(conditionResource, 'DomainResource');
     expect(fhirObject.getTypeInfo().name).to.equal('FHIR.DomainResource');
+    // Check one DomainResource property to be sure
+    const textStatus = fhirObject.get('text.status');
+    expect(textStatus.getTypeInfo().name).to.be.equal('FHIR.NarrativeStatus');
+    expect(textStatus.value).to.equal('generated');
+
     fhirObject = fhirWrapper.wrap(conditionResource, 'Resource');
     expect(fhirObject.getTypeInfo().name).to.equal('FHIR.Resource');
+    // Check one Resource property to be sure
+    const id = fhirObject.get('id');
+    expect(id.getTypeInfo().name).to.be.equal('FHIR.id');
+    expect(id.value).to.equal('f201');
   });
 
   it('should wrap a fhir resource to the type specified if downcasting', () => {
     // inheritance is: Condition < DomainResource < Resource
     let fhirObject = fhirWrapper.wrap(domainResource, 'Condition');
     expect(fhirObject.getTypeInfo().name).to.equal('FHIR.Condition');
+    // Check one Condition property to be sure
+    const dateRecorded = fhirObject.getDate('dateRecorded');
+    expect(dateRecorded.isDate).to.be.true;
+    expect(dateRecorded).to.deep.equal(cql.DateTime.parse('2013-04-04').getDate());
   });
 
   it('should error if requested type is incompatible', () => {
@@ -45,8 +62,6 @@ describe('#FHIRWrapper_DSTU2', () => {
   });
 });
 
-
-// Placeholder test
 describe('#DSTU2', () => {
   let patientSource;
   before(() => {
