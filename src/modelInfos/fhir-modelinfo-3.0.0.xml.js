@@ -2884,7 +2884,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="StructureMapTargetListMode" retrievable="false" baseType="FHIR.Element">
         <ns4:element name="value" type="System.String"/>
     </ns4:typeInfo>
-    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="DeviceRequest" retrievable="true" primaryCodePath="codeCodeableConcept" baseType="FHIR.DomainResource">
+    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="DeviceRequest" retrievable="true" primaryCodePath="code" baseType="FHIR.DomainResource">
         <ns4:element name="identifier">
             <ns4:typeSpecifier xsi:type="ns4:ListTypeSpecifier" elementType="FHIR.Identifier"/>
         </ns4:element>
@@ -4635,7 +4635,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns4:element name="cigar" type="FHIR.string"/>
         <ns4:element name="variantPointer" type="FHIR.Reference"/>
     </ns4:typeInfo>
-    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationDispense" retrievable="true" primaryCodePath="medicationCodeableConcept" baseType="FHIR.DomainResource">
+    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationDispense" retrievable="true" primaryCodePath="medication" baseType="FHIR.DomainResource">
         <ns4:element name="identifier">
             <ns4:typeSpecifier xsi:type="ns4:ListTypeSpecifier" elementType="FHIR.Identifier"/>
         </ns4:element>
@@ -5128,7 +5128,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="ConceptMapEquivalence" retrievable="false" baseType="FHIR.Element">
         <ns4:element name="value" type="System.String"/>
     </ns4:typeInfo>
-    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationRequest" retrievable="true" primaryCodePath="medicationCodeableConcept" baseType="FHIR.DomainResource">
+    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationRequest" retrievable="true" primaryCodePath="medication" baseType="FHIR.DomainResource">
         <ns4:element name="identifier">
             <ns4:typeSpecifier xsi:type="ns4:ListTypeSpecifier" elementType="FHIR.Identifier"/>
         </ns4:element>
@@ -6017,7 +6017,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns4:element name="document" type="FHIR.Attachment"/>
         <ns4:element name="resource" type="FHIR.Reference"/>
     </ns4:typeInfo>
-    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationAdministration" retrievable="true" primaryCodePath="medicationCodeableConcept" baseType="FHIR.DomainResource">
+    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationAdministration" retrievable="true" primaryCodePath="medication" baseType="FHIR.DomainResource">
         <ns4:element name="identifier">
             <ns4:typeSpecifier xsi:type="ns4:ListTypeSpecifier" elementType="FHIR.Identifier"/>
         </ns4:element>
@@ -7688,7 +7688,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="RelatedArtifactType" retrievable="false" baseType="FHIR.Element">
         <ns4:element name="value" type="System.String"/>
     </ns4:typeInfo>
-    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationStatement" retrievable="true" primaryCodePath="medicationCodeableConcept" baseType="FHIR.DomainResource">
+    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MedicationStatement" retrievable="true" primaryCodePath="medication" baseType="FHIR.DomainResource">
         <ns4:element name="identifier">
             <ns4:typeSpecifier xsi:type="ns4:ListTypeSpecifier" elementType="FHIR.Identifier"/>
         </ns4:element>

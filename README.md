@@ -1,7 +1,7 @@
 # CQL Execution FHIR Data Source
 
 This project establishes a FHIR-based data source module for use with the CQL Execution Engine.  Currently,
-FHIR 1.0.2 (DSTU2) and FHIR 3.0.0 (STU3) are supported.
+FHIR 1.0.2 (DSTU2), FHIR 3.0.0 (STU3), and FHIR 4.0.0 (R4) are supported.
 
 # Setting Up the Environment
 
@@ -25,7 +25,7 @@ const cqlfhir = require('cql-exec-fhir');
 // Code setting up the CQL library, executor, etc, and getting the patient data as a bundle
 // ...
 
-const patientSource = cqlfhir.PatientSource.FHIRv102(); // or .FHIRv300()
+const patientSource = cqlfhir.PatientSource.FHIRv102(); // or .FHIRv300() or .FHIRv400()
 patientSource.loadBundles([patient01, patient02]);
 const results = executor.exec(patientSource);
 ```
@@ -39,7 +39,7 @@ Example:
 
 ```js
 const cqlfhir = require('cql-exec-fhir');
-const fhirWrapper = cqlfhir.FHIRWrapper.FHIRv300();
+const fhirWrapper = cqlfhir.FHIRWrapper.FHIRv102(); // or .FHIRv300() or .FHIRv400()
 
 const conditionRawResource = { "resourceType": "Condition", "id": "f201", "clinicalStatus": "active", ... }
 const conditionFhirObject = fhirWrapper.wrap(conditionResource)
