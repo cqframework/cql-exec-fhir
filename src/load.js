@@ -194,7 +194,7 @@ class ClassElement {
 }
 
 const NAMED_TYPE_NAME = 'NamedTypeSpecifier';
-const NAMED_TYPE_RE = /^(([^\.<>]+)\.)?([^<>]+)$/;
+const NAMED_TYPE_RE = /^(([^.<>]+)\.)?([^<>]+)$/;
 class NamedTypeSpecifier {
   constructor(name, namespace) {
     this._name = name;
