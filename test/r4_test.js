@@ -6,7 +6,7 @@ const conditionResource = require('./fixtures/r4/Condition_f201.json');
 const patientMyron = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
 const patientShawnee = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
 
-describe('#FHIRWrapper_R4', () => {
+describe('#FHIRWrapper_R4 v4.0.0', () => {
   let fhirWrapper;
   let conditionResourceWithNoType;
   let domainResource;
