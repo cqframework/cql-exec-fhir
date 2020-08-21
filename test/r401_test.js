@@ -3,8 +3,8 @@ const cqlfhir = require('../src/index');
 const {expect} = require('chai');
 
 const conditionResource = require('./fixtures/r4/Condition_f201.json');
-const patientMyron = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
-const patientShawnee = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
+const patientLuna = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
+const patientJohnnie = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
 
 describe('#FHIRWrapper_R4 v4.0.1', () => {
   let fhirWrapper;
@@ -64,7 +64,7 @@ describe('#FHIRWrapper_R4 v4.0.1', () => {
   });
 });
 
-describe('#R4', () => {
+describe('#R4 v4.0.1', () => {
   let patientSource;
   before(() => {
     patientSource = cqlfhir.PatientSource.FHIRv401();
@@ -72,8 +72,8 @@ describe('#R4', () => {
 
   beforeEach(() => {
     patientSource.loadBundles([
-      patientMyron,
-      patientShawnee
+      patientLuna,
+      patientJohnnie
     ]);
   });
 
@@ -277,25 +277,8 @@ describe('#R4', () => {
   it('should support getting an option of a choice', () => {
     const pt = patientSource.currentPatient();
     const condition = pt.findRecords('Condition').find(p => p.getId() === '9934bc4f-58af-4ecf-bb70-b7cc31987fc5');
-    // In STU3, you use the stub of the choice (e.g., onset[x] datetime is retrieved as onset)
+    // In R4, you use the stub of the choice (e.g., onset[x] datetime is retrieved as onset)
     expect(condition.get('onset.value')).to.deep.equal(cql.DateTime.parse('2009-08-09T12:18:29-04:00'));
-  });
-
-  it('should support getting an option of a choice using explicit name', () => {
-    // This was needed because the ModelInfo used to indicate MedicationRequest's primaryCodePath as medicationCodeableConcept!
-    // Keep it in case anyone tries to load an older ModelInfo that still does that.
-    const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
-    const code = medReq.getCode('medicationCodeableConcept');
-    expect(code).to.deep.equal(new cql.Code('309097', 'http://www.nlm.nih.gov/research/umls/rxnorm', undefined, 'Cefuroxime 250 MG Oral Tablet'));
-  });
-
-  it('should not return wrong type if explicit choice name was requested but data used different type', () => {
-    // This is needed because the ModelInfo indicates MedicationRequest's primaryCodePath as medicationCodeableConcept!
-    const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
-    const ref = medReq.getCode('medicationReference');
-    expect(ref).to.be.undefined;
   });
 
   it('should support id and extension on primitives', () => {

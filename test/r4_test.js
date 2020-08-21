@@ -3,8 +3,8 @@ const cqlfhir = require('../src/index');
 const {expect} = require('chai');
 
 const conditionResource = require('./fixtures/r4/Condition_f201.json');
-const patientMyron = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
-const patientShawnee = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
+const patientLuna = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
+const patientJohnnie = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
 
 describe('#FHIRWrapper_R4 v4.0.0', () => {
   let fhirWrapper;
@@ -64,7 +64,7 @@ describe('#FHIRWrapper_R4 v4.0.0', () => {
   });
 });
 
-describe('#R4', () => {
+describe('#R4 v4.0.0', () => {
   let patientSource;
   before(() => {
     patientSource = cqlfhir.PatientSource.FHIRv400();
@@ -72,8 +72,8 @@ describe('#R4', () => {
 
   beforeEach(() => {
     patientSource.loadBundles([
-      patientMyron,
-      patientShawnee
+      patientLuna,
+      patientJohnnie
     ]);
   });
 
@@ -277,7 +277,7 @@ describe('#R4', () => {
   it('should support getting an option of a choice', () => {
     const pt = patientSource.currentPatient();
     const condition = pt.findRecords('Condition').find(p => p.getId() === '9934bc4f-58af-4ecf-bb70-b7cc31987fc5');
-    // In STU3, you use the stub of the choice (e.g., onset[x] datetime is retrieved as onset)
+    // In R4, you use the stub of the choice (e.g., onset[x] datetime is retrieved as onset)
     expect(condition.get('onset.value')).to.deep.equal(cql.DateTime.parse('2009-08-09T12:18:29-04:00'));
   });
 
