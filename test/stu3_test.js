@@ -2,14 +2,16 @@ const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
 const {expect} = require('chai');
 
+const conditionResource = require('./fixtures/stu3/Condition_f201.json');
+const patientMyron = require('./fixtures/stu3/Myron933_Ondricka197_a901d2b4-30a8-41b9-b94a-f44561d8f809.json');
+const patientShawnee = require('./fixtures/stu3/Shawnee493_Osinski784_60d5c7b1-53ee-49ca-a33a-945004d6b84f.json');
+
 describe('#FHIRWrapper_STU3', () => {
   let fhirWrapper;
-  let conditionResource;
   let conditionResourceWithNoType;
   let domainResource;
   before(() => {
     fhirWrapper = cqlfhir.FHIRWrapper.FHIRv300();
-    conditionResource = require('./fixtures/stu3/Condition_f201.json');
     conditionResourceWithNoType = JSON.parse(JSON.stringify(conditionResource));
     delete conditionResourceWithNoType.resourceType;
     domainResource = JSON.parse(JSON.stringify(conditionResource));
@@ -70,8 +72,8 @@ describe('#STU3', () => {
 
   beforeEach(() => {
     patientSource.loadBundles([
-      require('./fixtures/stu3/Myron933_Ondricka197_a901d2b4-30a8-41b9-b94a-f44561d8f809.json'),
-      require('./fixtures/stu3/Shawnee493_Osinski784_60d5c7b1-53ee-49ca-a33a-945004d6b84f.json')
+      patientMyron,
+      patientShawnee
     ]);
   });
 

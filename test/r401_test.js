@@ -6,12 +6,12 @@ const conditionResource = require('./fixtures/r4/Condition_f201.json');
 const patientLuna = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
 const patientJohnnie = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
 
-describe('#FHIRWrapper_R4 v4.0.0', () => {
+describe('#FHIRWrapper_R4 v4.0.1', () => {
   let fhirWrapper;
   let conditionResourceWithNoType;
   let domainResource;
   before(() => {
-    fhirWrapper = cqlfhir.FHIRWrapper.FHIRv400();
+    fhirWrapper = cqlfhir.FHIRWrapper.FHIRv401();
     conditionResourceWithNoType = JSON.parse(JSON.stringify(conditionResource));
     delete conditionResourceWithNoType.resourceType;
     domainResource = JSON.parse(JSON.stringify(conditionResource));
@@ -64,10 +64,10 @@ describe('#FHIRWrapper_R4 v4.0.0', () => {
   });
 });
 
-describe('#R4 v4.0.0', () => {
+describe('#R4 v4.0.1', () => {
   let patientSource;
   before(() => {
-    patientSource = cqlfhir.PatientSource.FHIRv400();
+    patientSource = cqlfhir.PatientSource.FHIRv401();
   });
 
   beforeEach(() => {
@@ -79,8 +79,8 @@ describe('#R4 v4.0.0', () => {
 
   afterEach(() => patientSource.reset());
 
-  it('should report version as 4.0.0', () => {
-    expect(patientSource.version).to.equal('4.0.0');
+  it('should report version as 4.0.1', () => {
+    expect(patientSource.version).to.equal('4.0.1');
   });
 
   it('should properly iterate test patients', () => {
@@ -121,10 +121,10 @@ describe('#R4 v4.0.0', () => {
     expect(extensions).to.have.length(7);
     //Check the first and last ones
     expect(compact(extensions[0])).to.deep.equal({
-      url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race',
+      url: { value: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race' },
       extension: [
         {
-          url: 'ombCategory',
+          url: { value: 'ombCategory' },
           value: {
             system: { value: 'urn:oid:2.16.840.1.113883.6.238' },
             code: { value: '2106-3' },
@@ -132,13 +132,13 @@ describe('#R4 v4.0.0', () => {
           }
         },
         {
-          url: 'text',
+          url: { value: 'text' },
           value: { value: 'White' }
         }
       ]
     });
     expect(compact(extensions[6])).to.deep.equal({
-      url: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years',
+      url: { value: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years' },
       value: { value: 10.0 }
     });
   });
@@ -281,29 +281,12 @@ describe('#R4 v4.0.0', () => {
     expect(condition.get('onset.value')).to.deep.equal(cql.DateTime.parse('2009-08-09T12:18:29-04:00'));
   });
 
-  it('should support getting an option of a choice using explicit name', () => {
-    // This was needed because the ModelInfo used to indicate MedicationRequest's primaryCodePath as medicationCodeableConcept!
-    // Keep it in case anyone tries to load an older ModelInfo that still does that.
-    const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
-    const code = medReq.getCode('medicationCodeableConcept');
-    expect(code).to.deep.equal(new cql.Code('309097', 'http://www.nlm.nih.gov/research/umls/rxnorm', undefined, 'Cefuroxime 250 MG Oral Tablet'));
-  });
-
-  it('should not return wrong type if explicit choice name was requested but data used different type', () => {
-    // This is needed because the ModelInfo indicates MedicationRequest's primaryCodePath as medicationCodeableConcept!
-    const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
-    const ref = medReq.getCode('medicationReference');
-    expect(ref).to.be.undefined;
-  });
-
   it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
     const encounter = pt.findRecords('Encounter').find(p => p.getId() === '9d911534-10d8-4dc2-91f1-d7aeed828af8');
     expect(encounter.get('status.id')).to.equal('12345');
     expect(compact(encounter.get('status.extension'))).to.deep.equal([ {
-      url : 'http://example.org/fhir/StructureDefinition/originalText',
+      url : { value: 'http://example.org/fhir/StructureDefinition/originalText' },
       value : { value: 'completed' }
     }]);
   });
