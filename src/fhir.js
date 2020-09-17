@@ -446,9 +446,10 @@ function toCode(f) {
       return codings.length === 1 ? codings[0] : codings;
     }
   } else if (typeName === 'Coding') {
-    return new cql.Code(f.code.value, f.system ? f.system.value : f.system, f.version ? f.version.value : f.version, f.display ? f.display.value : f.display);
+    return new cql.Code(f.code ? f.code.value : f.code, f.system ? f.system.value : f.system, f.version ? f.version.value : f.version, f.display ? f.display.value : f.display);
+  } else if (typeName === 'code') {
+    return f.value;
   }
-  return new cql.Code(f.code.value);
 }
 
 module.exports = { PatientSource, FHIRWrapper };

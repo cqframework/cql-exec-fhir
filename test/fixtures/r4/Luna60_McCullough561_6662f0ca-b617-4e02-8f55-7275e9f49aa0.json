@@ -5813,6 +5813,33 @@
       }
     },
     {
+      "fullUrl": "urn:uuid:622c5788-3028-41fd-a8cb-164f868d4323",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "622c5788-3028-41fd-a8cb-164f868d4323",
+        "status": "stopped",
+        "intent": "order",
+        "medicationReference": {
+          "reference": "urn:uuid:622c5788-3028-41fd-a8cb-164f868d4324",
+          "display": "Cefuroxime 250 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "urn:uuid:356a0ab8-5592-4ec5-8c3a-9a4d0857b793"
+        },
+        "encounter": {
+          "reference": "urn:uuid:45761e8d-e80a-4abd-817f-99c196027124"
+        },
+        "authoredOn": "2009-12-01T11:18:29-05:00",
+        "requester": {
+          "reference": "urn:uuid:558f4663-58a9-418c-809e-cfdc4f0ae6b4"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
+    },
+    {
       "fullUrl": "urn:uuid:740826c7-610f-4d30-b5af-8483c30a3f47",
       "resource": {
         "resourceType": "Claim",
