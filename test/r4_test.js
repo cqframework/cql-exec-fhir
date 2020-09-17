@@ -298,6 +298,14 @@ describe('#R4 v4.0.0', () => {
     expect(ref).to.be.undefined;
   });
 
+  it('should return undefined when attempting to get the code on a choice that is a reference', () => {
+    // This was a bug that surfaced when testing some CQL against Synthea patients that use medicationReference
+    const pt = patientSource.currentPatient();
+    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4323');
+    const ref = medReq.getCode('medication');
+    expect(ref).to.be.undefined;
+  });
+
   it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
     const encounter = pt.findRecords('Encounter').find(p => p.getId() === '9d911534-10d8-4dc2-91f1-d7aeed828af8');
