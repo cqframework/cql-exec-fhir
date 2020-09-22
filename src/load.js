@@ -100,7 +100,7 @@ class ModelInfo {
 
 class ClassInfo {
   constructor(xml, modelInfo) {
-    this._namespace = xml.$.namespace;
+    this._namespace = xml.$.namespace || modelInfo.url;
     this._name = xml.$.name;
     this._identifier = xml.$.identifier;
     this._label = xml.$.label;
@@ -118,6 +118,7 @@ class ClassInfo {
     this._parentClasses = null; //lazy loaded
   }
 
+  get namespace() { return this._namespace; }
   get name() { return this._name; }
   get identifier() { return this._identifier; }
   get label() { return this._label; }
