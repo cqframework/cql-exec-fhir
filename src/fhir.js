@@ -241,12 +241,8 @@ class FHIRObject {
   }
 
   _is(namespace, name) {
-    // first, check if it's an exact match (e.g. FHIR Patient to FHIR Patient)
     const typeHierarchy = this._typeHierarchy();
-    if (namespace === 'http://hl7.org/fhir' && typeHierarchy.includes(name)) {
-      return true;
-    }
-    return false;
+    return namespace === 'http://hl7.org/fhir' && typeHierarchy.includes(name);
   }
 
   _typeHierarchy() {
