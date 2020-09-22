@@ -240,20 +240,22 @@ class FHIRObject {
     return dateOrIvl;
   }
 
-  _is(typeSpec) {
-    // Parse out the namespace (in the curly braces) and resource type
-    const typeParse = /^\{(.+)\}(.+)/.exec(typeSpec.name);
-    if (typeParse.length !== null) {
-      // first, check if it's an exact match (e.g. FHIR Patient to FHIR Patient)
-      if (typeParse[1] === 'http://hl7.org/fhir' && this.getTypeInfo().name === typeParse[2]) {
-        return true;
-      } else if (this.getTypeInfo().parentClasses()) {
-        // If it's not an exact match, see if something up the inheritance tree is the type we want
-        const parentTypeNames = this.getTypeInfo().parentClasses().map(c => c.name);
-        return typeParse[1] === 'http://hl7.org/fhir' && parentTypeNames.includes(typeParse[2]);
-      }
+  _is(namespace, name) {
+    // first, check if it's an exact match (e.g. FHIR Patient to FHIR Patient)
+    const typeHierarchy = this._typeHierarchy();
+    if (namespace === 'http://hl7.org/fhir' && typeHierarchy.includes(name)) {
+      return true;
     }
     return false;
+  }
+
+  _typeHierarchy() {
+    let parentTypes = [];
+    if (this.getTypeInfo() !== undefined && this.getTypeInfo().parentClasses() !== undefined) {
+      parentTypes = this.getTypeInfo().parentClasses().map(c => c.name);
+    }
+    parentTypes.unshift(this.getTypeInfo().name);
+    return parentTypes;
   }
 
   getTypeInfo() { return this._typeInfo; }
