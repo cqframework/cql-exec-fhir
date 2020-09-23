@@ -241,17 +241,23 @@ class FHIRObject {
   }
 
   _is(namespace, name) {
-    const typeHierarchy = this._typeHierarchy();
-    return namespace === 'http://hl7.org/fhir' && typeHierarchy.includes(name);
+    return this._typeHierarchy().some(t => t.namespace === namespace && t.name == name);
   }
 
   _typeHierarchy() {
-    let parentTypes = [];
-    if (this.getTypeInfo() !== undefined && this.getTypeInfo().parentClasses() !== undefined) {
-      parentTypes = this.getTypeInfo().parentClasses().map(c => c.name);
+    let typeHierarchy = [];
+    if (this.getTypeInfo() != null) {
+      typeHierarchy = [this.getTypeInfo(), ...this.getTypeInfo().parentClasses()].map(c => {
+        return {
+          namespace: c.namespace,
+          name: c.name
+        };
+      });
     }
-    parentTypes.unshift(this.getTypeInfo().name);
-    return parentTypes;
+    // TODO: This currently doesn't include System types in the hierarchy.  We should fix this in the parentClasses
+    // function, but until then, we know that everything eventually inherits from System.Any, so force that here:
+    typeHierarchy.push({ namespace: 'urn:hl7-org:elm-types:r1', name: 'Any' });
+    return typeHierarchy;
   }
 
   getTypeInfo() { return this._typeInfo; }
