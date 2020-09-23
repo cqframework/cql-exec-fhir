@@ -125,6 +125,7 @@ class ClassInfo {
   get isRetrievable() { return this._isRetrievable; }
   get primaryCodePath() { return this._primaryCodePath; }
   get baseTypeSpecifier() { return this._baseTypeSpecifier; }
+  get modelInfo() { return this._modelInfo; }
   get elements() { return Array.from(this._elementsByName.values()); }
 
   // @return NamedTypeSpecifier
