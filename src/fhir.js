@@ -248,8 +248,14 @@ class FHIRObject {
     let typeHierarchy = [];
     if (this.getTypeInfo() != null) {
       typeHierarchy = [this.getTypeInfo(), ...this.getTypeInfo().parentClasses()].map(c => {
+        let namespace = c.namespace;
+        if (namespace === c.modelInfo.name) {
+          namespace = c.modelInfo.url;
+        } else if (namespace === 'System') {
+          namespace = 'urn:hl7-org:elm-types:r1';
+        }
         return {
-          namespace: c.namespace,
+          namespace,
           name: c.name
         };
       });
