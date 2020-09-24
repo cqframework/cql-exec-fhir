@@ -299,6 +299,29 @@ describe('#R4 v4.0.1', () => {
       { value: 'Apt. C' }
     ]);
   });
+
+  it('should support _typeHierarchy', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecord('Condition');
+    expect(condition._typeHierarchy()).to.eql([
+      { name: 'Condition', namespace: 'http://hl7.org/fhir' },
+      { name: 'DomainResource', namespace: 'http://hl7.org/fhir' },
+      { name: 'Resource', namespace: 'http://hl7.org/fhir' },
+      { name: 'Any', namespace: 'urn:hl7-org:elm-types:r1' },
+    ]);
+  });
+
+  it('should support _is', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecord('Condition');
+    expect(condition._is('http://hl7.org/fhir', 'Condition')).to.be.true;
+    expect(condition._is('http://hl7.org/fhir', 'DomainResource')).to.be.true;
+    expect(condition._is('http://hl7.org/fhir', 'Resource')).to.be.true;
+    expect(condition._is('urn:hl7-org:elm-types:r1', 'Any')).to.be.true;
+    expect(condition._is('http://some.other.model.org', 'Condition')).to.be
+      .false;
+    expect(condition._is('http://hl7.org/fhir', 'Observation')).to.be.false;
+  });
 });
 
 function compact(obj) {
