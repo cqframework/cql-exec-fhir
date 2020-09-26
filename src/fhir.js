@@ -248,16 +248,19 @@ class FHIRObject {
     let typeHierarchy = [];
     if (this.getTypeInfo() != null) {
       typeHierarchy = [this.getTypeInfo(), ...this.getTypeInfo().parentClasses()].map(c => {
+        // Account for when the namespace comes in as the model name rather than the model url
         let namespace = c.namespace;
         if (namespace === c.modelInfo.name) {
           namespace = c.modelInfo.url;
         } else if (namespace === 'System') {
           namespace = 'urn:hl7-org:elm-types:r1';
         }
-        return {
-          namespace,
-          name: c.name
-        };
+        // Account for when the name is prefixed by the model name and a dot
+        let name = c.name;
+        if (name.startsWith(`${c.modelInfo.name}.`)) {
+          name = name.slice(c.modelInfo.name.length + 1);
+        }
+        return { namespace, name };
       });
     }
     // TODO: This currently doesn't include System types in the hierarchy.  We should fix this in the parentClasses
