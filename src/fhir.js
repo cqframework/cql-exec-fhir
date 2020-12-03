@@ -240,6 +240,39 @@ class FHIRObject {
     return dateOrIvl;
   }
 
+  _is(typeSpecifier) {
+    return this._typeHierarchy().some(
+      (t) => t.type === typeSpecifier.type && t.name == typeSpecifier.name
+    );
+  }
+
+  _typeHierarchy() {
+    let typeHierarchy = [];
+    if (this.getTypeInfo() != null) {
+      typeHierarchy = [this.getTypeInfo(), ...this.getTypeInfo().parentClasses()].map(c => {
+        // Account for when the namespace comes in as the model name rather than the model url
+        let namespace = c.namespace;
+        if (namespace === c.modelInfo.name) {
+          namespace = c.modelInfo.url;
+        } else if (namespace === 'System') {
+          namespace = 'urn:hl7-org:elm-types:r1';
+        }
+        // Account for when the name is prefixed by the model name and a dot
+        let name = c.name;
+        if (name.startsWith(`${c.modelInfo.name}.`)) {
+          name = name.slice(c.modelInfo.name.length + 1);
+        }
+        name = `{${namespace}}${name}`;
+        // At this point, all the FHIR models are considered named types
+        return { name, type: 'NamedTypeSpecifier' };
+      });
+    }
+    // TODO: This currently doesn't include System types in the hierarchy.  We should fix this in the parentClasses
+    // function, but until then, we know that everything eventually inherits from System.Any, so force that here:
+    typeHierarchy.push({name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' });
+    return typeHierarchy;
+  }
+
   getTypeInfo() { return this._typeInfo; }
 }
 

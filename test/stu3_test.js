@@ -315,6 +315,29 @@ describe('#STU3', () => {
       { value: 'Apt. C' }
     ]);
   });
+
+  it('should support _typeHierarchy', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecord('Condition');
+    expect(condition._typeHierarchy()).to.eql([
+      { name: '{http://hl7.org/fhir}Condition', type: 'NamedTypeSpecifier' },
+      { name: '{http://hl7.org/fhir}DomainResource', type: 'NamedTypeSpecifier' },
+      { name: '{http://hl7.org/fhir}Resource', type: 'NamedTypeSpecifier' },
+      { name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' },
+    ]);
+  });
+
+  it('should support _is', () => {
+    const pt = patientSource.currentPatient();
+    const condition = pt.findRecord('Condition');
+    expect(condition._is({name: '{http://hl7.org/fhir}Condition', type: 'NamedTypeSpecifier'})).to.be.true;
+    expect(condition._is({name: '{http://hl7.org/fhir}DomainResource', type: 'NamedTypeSpecifier'})).to.be.true;
+    expect(condition._is({name: '{http://hl7.org/fhir}Resource', type: 'NamedTypeSpecifier'})).to.be.true;
+    expect(condition._is({name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier'})).to.be.true;
+    expect(condition._is({name: '{http://some.other.model.org}Condition', type: 'NamedTypeSpecifier'})).to.be.false;
+    expect(condition._is({name: '{http://hl7.org/fhir}Observation', type: 'NamedTypeSpecifier'})).to.be.false;
+    expect(condition._is({name: '{http://hl7.org/fhir}Condition', type: 'IntervalTypeSpecifier'})).to.be.false;
+  });
 });
 
 function compact(obj) {
