@@ -286,8 +286,8 @@ describe('#R4 v4.0.1', () => {
     const encounter = pt.findRecords('Encounter').find(p => p.getId() === '9d911534-10d8-4dc2-91f1-d7aeed828af8');
     expect(encounter.get('status.id')).to.equal('12345');
     expect(compact(encounter.get('status.extension'))).to.deep.equal([ {
-      url : { value: 'http://example.org/fhir/StructureDefinition/originalText' },
-      value : { value: 'completed' }
+      url: { value: 'http://example.org/fhir/StructureDefinition/originalText' },
+      value: { value: 'completed' }
     }]);
   });
 
