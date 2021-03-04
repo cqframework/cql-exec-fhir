@@ -410,10 +410,14 @@ function toSystemObject(data, name) {
   case 'Date':
     // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use this workaround
     return cql.DateTime.parse(data) != null ? cql.DateTime.parse(data).getDate() : undefined;
-  case 'Time':
-    // CQL DateTime doesn't support 'Z' right now, so account for that.
+  case 'Time': {
+    // CQL DateTime doesn't support 'Z' right now, so account for that. In addition Time should not
+    // have an offset, so clear the offset as well.
     // NOTE: Current CQL execution treats time as a DateTime w/ date fixed to 0000-01-01.
-    return cql.DateTime.parse(`0000-01-01T${data.replace('Z', '+00:00')}`);
+    const time = cql.DateTime.parse(`0000-01-01T${data.replace('Z', '+00:00')}`);
+    time.timezoneOffset = null;
+    return time;
+  }
   }
 }
 

@@ -8341,7 +8341,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns4:element name="value" elementType="System.String"/>
     </ns4:typeInfo>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="Extension" retrievable="false" baseType="FHIR.Element">
-        <ns4:element name="url" elementType="System.String"/>
+        <ns4:element name="url" elementType="FHIR.uri"/>
         <ns4:element name="value">
             <ns4:elementTypeSpecifier xsi:type="ns4:ChoiceTypeSpecifier">
                 <ns4:choice xsi:type="ns4:NamedTypeSpecifier" modelName="FHIR" name="base64Binary"/>
@@ -10075,6 +10075,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns4:element name="amount" elementType="FHIR.Quantity"/>
     </ns4:typeInfo>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="Distance" retrievable="false" baseType="FHIR.Quantity"/>
+    <ns4:typeInfo xsi:type="ns4:ClassInfo" name="MoneyQuantity" retrievable="false" baseType="FHIR.Quantity"/>
     <ns4:typeInfo xsi:type="ns4:ClassInfo" name="ImplementationGuide.Definition" retrievable="false" baseType="FHIR.BackboneElement">
         <ns4:element name="grouping">
             <ns4:elementTypeSpecifier xsi:type="ns4:ListTypeSpecifier" elementType="FHIR.ImplementationGuide.Grouping"/>
@@ -11454,7 +11455,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     </ns4:typeInfo>
     <ns4:conversionInfo fromType="FHIR.Coding" toType="System.Code" functionName="FHIRHelpers.ToCode"/>
     <ns4:conversionInfo fromType="FHIR.CodeableConcept" toType="System.Concept" functionName="FHIRHelpers.ToConcept"/>
-    <ns4:conversionInfo functionName="FHIRHelpers.Tobase64Binary" fromType="FHIR.base64Binary" toType="System.String" />
+    <ns4:conversionInfo functionName="FHIRHelpers.ToString" fromType="FHIR.base64Binary" toType="System.String" />
     <ns4:conversionInfo functionName="FHIRHelpers.ToBoolean" fromType="FHIR.boolean" toType="System.Boolean" />
     <ns4:conversionInfo functionName="FHIRHelpers.ToDate" fromType="FHIR.date" toType="System.Date" />
     <ns4:conversionInfo functionName="FHIRHelpers.ToDateTime" fromType="FHIR.instant" toType="System.DateTime" />
@@ -11467,6 +11468,7 @@ module.exports = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <ns4:conversionInfo fromType="FHIR.Quantity" toType="System.Quantity" functionName="FHIRHelpers.ToQuantity"/>
     <ns4:conversionInfo fromType="FHIR.Period" toType="Interval&lt;System.DateTime&gt;" functionName="FHIRHelpers.ToInterval"/>
     <ns4:conversionInfo fromType="FHIR.Range" toType="Interval&lt;System.Quantity&gt;" functionName="FHIRHelpers.ToInterval"/>
+    <ns4:conversionInfo functionName="FHIRHelpers.ToRatio" fromType="FHIR.Ratio" toType="System.Ratio"/>
     <ns4:conversionInfo fromType="FHIR.uuid" toType="System.String" functionName="FHIRHelpers.ToString"/>
     <ns4:conversionInfo fromType="FHIR.TestScriptRequestMethodCode" toType="System.String" functionName="FHIRHelpers.ToString"/>
     <ns4:conversionInfo fromType="FHIR.SortDirection" toType="System.String" functionName="FHIRHelpers.ToString"/>

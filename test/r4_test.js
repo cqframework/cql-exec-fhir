@@ -121,10 +121,10 @@ describe('#R4 v4.0.0', () => {
     expect(extensions).to.have.length(7);
     //Check the first and last ones
     expect(compact(extensions[0])).to.deep.equal({
-      url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race',
+      url: { value: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race' },
       extension: [
         {
-          url: 'ombCategory',
+          url: { value: 'ombCategory' },
           value: {
             system: { value: 'urn:oid:2.16.840.1.113883.6.238' },
             code: { value: '2106-3' },
@@ -132,13 +132,13 @@ describe('#R4 v4.0.0', () => {
           }
         },
         {
-          url: 'text',
+          url: { value: 'text' },
           value: { value: 'White' }
         }
       ]
     });
     expect(compact(extensions[6])).to.deep.equal({
-      url: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years',
+      url: { value: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years' },
       value: { value: 10.0 }
     });
   });
@@ -311,8 +311,8 @@ describe('#R4 v4.0.0', () => {
     const encounter = pt.findRecords('Encounter').find(p => p.getId() === '9d911534-10d8-4dc2-91f1-d7aeed828af8');
     expect(encounter.get('status.id')).to.equal('12345');
     expect(compact(encounter.get('status.extension'))).to.deep.equal([ {
-      url : 'http://example.org/fhir/StructureDefinition/originalText',
-      value : { value: 'completed' }
+      url: { value: 'http://example.org/fhir/StructureDefinition/originalText' },
+      value: { value: 'completed' }
     }]);
   });
 

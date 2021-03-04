@@ -121,7 +121,7 @@ describe('#DSTU2', () => {
     expect(extensions).to.have.length(7);
     //Check the first and last ones
     expect(compact(extensions[0])).to.deep.equal({
-      url: 'http://hl7.org/fhir/StructureDefinition/us-core-race',
+      url: { value: 'http://hl7.org/fhir/StructureDefinition/us-core-race' },
       valueCodeableConcept: {
         coding: [
           {
@@ -134,7 +134,7 @@ describe('#DSTU2', () => {
       }
     });
     expect(compact(extensions[6])).to.deep.equal({
-      url: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years',
+      url: { value: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years' },
       valueDecimal: { value: 40.353136402148294 }
     });
   });
@@ -233,7 +233,7 @@ describe('#DSTU2', () => {
 
   it('should support getting decimals', () => {
     const pt = patientSource.currentPatient();
-    const daly = pt.get('extension').find(e => e.url === 'http://synthetichealth.github.io/synthea/disability-adjusted-life-years');
+    const daly = pt.get('extension').find(e => e.url && e.url.value === 'http://synthetichealth.github.io/synthea/disability-adjusted-life-years');
     expect(daly.get('valueDecimal.value')).to.deep.equal(1.6468635978517043);
   });
 
@@ -285,8 +285,8 @@ describe('#DSTU2', () => {
     const goal = pt.findRecords('Goal').find(p => p.getId() === 'ba9ddc45-9800-4537-97db-df84891597e9');
     expect(goal.get('status.id')).to.equal('12345');
     expect(compact(goal.get('status.extension'))).to.deep.equal([ {
-      url : 'http://example.org/fhir/StructureDefinition/originalText',
-      valueCode : { value: 'progressing' }
+      url: { value: 'http://example.org/fhir/StructureDefinition/originalText' },
+      valueCode: { value: 'progressing' }
     }]);
   });
 
