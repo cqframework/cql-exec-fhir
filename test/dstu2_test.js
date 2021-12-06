@@ -145,7 +145,7 @@ describe('#DSTU2', () => {
     expect(conditions).to.have.length(9);
     expect(conditions.every(c => c.getTypeInfo().name === 'FHIR.Condition')).to.be.true;
     const paymentReconciliations = pt.findRecords('PaymentReconciliation');
-    expect(paymentReconciliations.length).to.be.empty;
+    expect(paymentReconciliations).to.be.empty;
   });
 
   it('should find records by model name and type name (e.g., FHIR.Condition)', () =>{
@@ -154,7 +154,7 @@ describe('#DSTU2', () => {
     expect(conditions).to.have.length(9);
     expect(conditions.every(c => c.getTypeInfo().name === 'FHIR.Condition')).to.be.true;
     const paymentReconciliations = pt.findRecords('FHIR.PaymentReconciliation');
-    expect(paymentReconciliations.length).to.be.empty;
+    expect(paymentReconciliations).to.be.empty;
   });
 
   it('should find records by model URL and type name (e.g., {http://hl7.org/fhir}Condition)', () =>{
@@ -163,7 +163,7 @@ describe('#DSTU2', () => {
     expect(conditions).to.have.length(9);
     expect(conditions.every(c => c.getTypeInfo().name === 'FHIR.Condition')).to.be.true;
     const paymentReconciliations = pt.findRecords('{http://hl7.org/fhir}PaymentReconciliation');
-    expect(paymentReconciliations.length).to.be.empty;
+    expect(paymentReconciliations).to.be.empty;
   });
 
   it('should find a single record', () =>{
