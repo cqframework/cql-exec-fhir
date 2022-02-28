@@ -1,42 +1,42 @@
-const cql = require("cql-execution");
-const cqlfhir = require("../src/index");
-const { expect } = require("chai");
-const nock = require("nock");
-const axios = require("axios");
-const load = require("../src/load");
+const cql = require('cql-execution');
+const cqlfhir = require('../src/index');
+const { expect } = require('chai');
+const nock = require('nock');
+const axios = require('axios');
+const load = require('../src/load');
 
-const conditionResource = require("./fixtures/r4/Condition_f201.json");
-const patientLuna = require("./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json");
-const patientJohnnie = require("./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json");
-const FHIRv401XML = require("../src/modelInfos/fhir-modelinfo-4.0.1.xml.js");
+const conditionResource = require('./fixtures/r4/Condition_f201.json');
+const patientLuna = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
+const patientJohnnie = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
+const FHIRv401XML = require('../src/modelInfos/fhir-modelinfo-4.0.1.xml.js');
 
-const TEST_SERVER_URL = "http://www.example.com";
+const TEST_SERVER_URL = 'http://www.example.com';
 const TEST_SERVER_INSTANCE = axios.create({
   baseURL: TEST_SERVER_URL,
   timeout: 10000,
   headers: {
-    "Content-Type": "application/fhir+json",
-    accept: "application/fhir+json",
-  },
+    'Content-Type': 'application/fhir+json',
+    accept: 'application/fhir+json'
+  }
 });
 const TEST_PATIENT_SOURCE_IDS = [
   patientLuna.entry[0].resource.id,
-  patientJohnnie.entry[0].resource.id,
+  patientJohnnie.entry[0].resource.id
 ];
 
 const EXAMPLE_EMPTY_SEARCH = {
-  resourceType: "Bundle",
-  type: "searchset",
-  total: 0,
+  resourceType: 'Bundle',
+  type: 'searchset',
+  total: 0
 };
 const EXAMPLE_NON_EMPTY_SEARCH = {
-  resourceType: "Bundle",
-  type: "searchset",
+  resourceType: 'Bundle',
+  type: 'searchset',
   total: 1,
-  entry: [conditionResource],
+  entry: [conditionResource]
 };
 
-describe("#FHIRWrapper_R4 v4.0.1", () => {
+describe('#FHIRWrapper_R4 v4.0.1', () => {
   let fhirWrapper;
   let conditionResourceWithNoType;
   let domainResource;
@@ -45,63 +45,60 @@ describe("#FHIRWrapper_R4 v4.0.1", () => {
     conditionResourceWithNoType = JSON.parse(JSON.stringify(conditionResource));
     delete conditionResourceWithNoType.resourceType;
     domainResource = JSON.parse(JSON.stringify(conditionResource));
-    domainResource.resourceType = "DomainResource";
+    domainResource.resourceType = 'DomainResource';
   });
 
-  it("should wrap a fhir resource to the correct type when type not specified", () => {
+  it('should wrap a fhir resource to the correct type when type not specified', () => {
     let fhirObject = fhirWrapper.wrap(conditionResource);
-    expect(fhirObject.getTypeInfo().name).to.equal("Condition");
+    expect(fhirObject.getTypeInfo().name).to.equal('Condition');
     // Check one Condition property to be sure
-    const recordedDate = fhirObject.getDate("recordedDate");
+    const recordedDate = fhirObject.getDate('recordedDate');
     expect(recordedDate.isDateTime).to.be.true;
-    expect(recordedDate).to.deep.equal(cql.DateTime.parse("2013-04-04"));
+    expect(recordedDate).to.deep.equal(cql.DateTime.parse('2013-04-04'));
   });
 
-  it("should wrap a fhir resource to the type specified if upcasting", () => {
+  it('should wrap a fhir resource to the type specified if upcasting', () => {
     // inheritance is: Condition < DomainResource < Resource
-    let fhirObject = fhirWrapper.wrap(conditionResource, "DomainResource");
-    expect(fhirObject.getTypeInfo().name).to.equal("DomainResource");
+    let fhirObject = fhirWrapper.wrap(conditionResource, 'DomainResource');
+    expect(fhirObject.getTypeInfo().name).to.equal('DomainResource');
     // Check one DomainResource property to be sure
-    const textStatus = fhirObject.get("text.status");
-    expect(textStatus.getTypeInfo().name).to.be.equal("NarrativeStatus");
-    expect(textStatus.value).to.equal("generated");
+    const textStatus = fhirObject.get('text.status');
+    expect(textStatus.getTypeInfo().name).to.be.equal('NarrativeStatus');
+    expect(textStatus.value).to.equal('generated');
 
-    fhirObject = fhirWrapper.wrap(conditionResource, "Resource");
-    expect(fhirObject.getTypeInfo().name).to.equal("Resource");
+    fhirObject = fhirWrapper.wrap(conditionResource, 'Resource');
+    expect(fhirObject.getTypeInfo().name).to.equal('Resource');
     // Check one Resource property to be sure
-    const id = fhirObject.get("id");
-    expect(id.getTypeInfo().name).to.be.equal("id");
-    expect(id.value).to.equal("f201");
+    const id = fhirObject.get('id');
+    expect(id.getTypeInfo().name).to.be.equal('id');
+    expect(id.value).to.equal('f201');
   });
 
-  it("should wrap a fhir resource to the type specified if downcasting", () => {
+  it('should wrap a fhir resource to the type specified if downcasting', () => {
     // inheritance is: Condition < DomainResource < Resource
-    let fhirObject = fhirWrapper.wrap(domainResource, "Condition");
-    expect(fhirObject.getTypeInfo().name).to.equal("Condition");
+    let fhirObject = fhirWrapper.wrap(domainResource, 'Condition');
+    expect(fhirObject.getTypeInfo().name).to.equal('Condition');
     // Check one Condition property to be sure
-    const recordedDate = fhirObject.getDate("recordedDate");
+    const recordedDate = fhirObject.getDate('recordedDate');
     expect(recordedDate.isDateTime).to.be.true;
-    expect(recordedDate).to.deep.equal(cql.DateTime.parse("2013-04-04"));
+    expect(recordedDate).to.deep.equal(cql.DateTime.parse('2013-04-04'));
   });
 
-  it("should error if requested type is incompatible", () => {
+  it('should error if requested type is incompatible', () => {
     expect(function () {
-      fhirWrapper.wrap(conditionResource, "Observation");
+      fhirWrapper.wrap(conditionResource, 'Observation');
     }).to.throw(
-      "Incompatible types: FHIR resourceType is Condition which cannot be cast as Observation"
+      'Incompatible types: FHIR resourceType is Condition which cannot be cast as Observation'
     );
   });
 
-  it("should wrap a fhir resource to the type specified if real type unknown", () => {
-    let fhirObject = fhirWrapper.wrap(
-      conditionResourceWithNoType,
-      "Observation"
-    );
-    expect(fhirObject.getTypeInfo().name).to.equal("Observation");
+  it('should wrap a fhir resource to the type specified if real type unknown', () => {
+    let fhirObject = fhirWrapper.wrap(conditionResourceWithNoType, 'Observation');
+    expect(fhirObject.getTypeInfo().name).to.equal('Observation');
   });
 });
 
-describe("#R4 v4.0.1", () => {
+describe('#R4 v4.0.1', () => {
   let patientSource;
   before(() => {
     patientSource = cqlfhir.PatientSource.FHIRv401();
@@ -113,23 +110,23 @@ describe("#R4 v4.0.1", () => {
 
   afterEach(() => patientSource.reset());
 
-  it("should report version as 4.0.1", () => {
-    expect(patientSource.version).to.equal("4.0.1");
+  it('should report version as 4.0.1', () => {
+    expect(patientSource.version).to.equal('4.0.1');
   });
 
-  it("should properly iterate test patients", () => {
+  it('should properly iterate test patients', () => {
     // Check first patient
     const luna = patientSource.currentPatient();
-    expect(luna.getId()).to.equal("356a0ab8-5592-4ec5-8c3a-9a4d0857b793");
+    expect(luna.getId()).to.equal('356a0ab8-5592-4ec5-8c3a-9a4d0857b793');
     // Check next patient
     const johnnie = patientSource.nextPatient();
-    expect(johnnie.getId()).to.equal("ea877536-55b1-4ec8-a12b-e95594214c01");
+    expect(johnnie.getId()).to.equal('ea877536-55b1-4ec8-a12b-e95594214c01');
     // No more patients should result in undefined
     expect(patientSource.nextPatient()).to.be.undefined;
     expect(patientSource.currentPatient()).to.be.undefined;
   });
 
-  it("should set the current patient to the next when nextPatient is called", () => {
+  it('should set the current patient to the next when nextPatient is called', () => {
     const originalCurrent = patientSource.currentPatient();
     const nextPatient = patientSource.nextPatient();
     const newCurrent = patientSource.currentPatient();
@@ -137,334 +134,314 @@ describe("#R4 v4.0.1", () => {
     expect(newCurrent).to.deep.equal(nextPatient);
   });
 
-  it("should clone currentPatient each time it is called", () => {
-    expect(patientSource.currentPatient()).to.deep.equal(
-      patientSource.currentPatient()
-    );
-    expect(patientSource.currentPatient()).to.not.equal(
-      patientSource.currentPatient()
-    );
+  it('should clone currentPatient each time it is called', () => {
+    expect(patientSource.currentPatient()).to.deep.equal(patientSource.currentPatient());
+    expect(patientSource.currentPatient()).to.not.equal(patientSource.currentPatient());
   });
 
-  it("should find patient birthDate", () => {
+  it('should find patient birthDate', () => {
     const pt = patientSource.currentPatient();
     // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use the .getDate() workaround
-    expect(compact(pt.get("birthDate"))).to.deep.equal({
-      value: new cql.DateTime.parse("2008-11-06").getDate(),
+    expect(compact(pt.get('birthDate'))).to.deep.equal({
+      value: new cql.DateTime.parse('2008-11-06').getDate()
     });
-    expect(pt.get("birthDate.value")).to.deep.equal(
-      new cql.DateTime.parse("2008-11-06").getDate()
-    );
+    expect(pt.get('birthDate.value')).to.deep.equal(new cql.DateTime.parse('2008-11-06').getDate());
   });
 
-  it("should find patient extensions", () => {
+  it('should find patient extensions', () => {
     const pt = patientSource.currentPatient();
-    const extensions = pt.get("extension");
+    const extensions = pt.get('extension');
     expect(extensions).to.have.length(7);
     //Check the first and last ones
     expect(compact(extensions[0])).to.deep.equal({
       url: {
-        value: "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+        value: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race'
       },
       extension: [
         {
-          url: { value: "ombCategory" },
+          url: { value: 'ombCategory' },
           value: {
-            system: { value: "urn:oid:2.16.840.1.113883.6.238" },
-            code: { value: "2106-3" },
-            display: { value: "White" },
-          },
+            system: { value: 'urn:oid:2.16.840.1.113883.6.238' },
+            code: { value: '2106-3' },
+            display: { value: 'White' }
+          }
         },
         {
-          url: { value: "text" },
-          value: { value: "White" },
-        },
-      ],
+          url: { value: 'text' },
+          value: { value: 'White' }
+        }
+      ]
     });
     expect(compact(extensions[6])).to.deep.equal({
       url: {
-        value:
-          "http://synthetichealth.github.io/synthea/quality-adjusted-life-years",
+        value: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years'
       },
-      value: { value: 10.0 },
+      value: { value: 10.0 }
     });
   });
 
-  it("should find records by type name (e.g., Condition)", () => {
+  it('should find records by type name (e.g., Condition)', () => {
     const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords("Condition");
+    const conditions = pt.findRecords('Condition');
     expect(conditions).to.have.length(8);
-    expect(conditions.every((c) => c.getTypeInfo().name === "Condition")).to.be
-      .true;
-    const paymentReconciliations = pt.findRecords("PaymentReconciliation");
+    expect(conditions.every(c => c.getTypeInfo().name === 'Condition')).to.be.true;
+    const paymentReconciliations = pt.findRecords('PaymentReconciliation');
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it("should find records by model name and type name (e.g., FHIR.Condition)", () => {
+  it('should find records by model name and type name (e.g., FHIR.Condition)', () => {
     const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords("FHIR.Condition");
+    const conditions = pt.findRecords('FHIR.Condition');
     expect(conditions).to.have.length(8);
-    expect(conditions.every((c) => c.getTypeInfo().name === "Condition")).to.be
-      .true;
-    const paymentReconciliations = pt.findRecords("FHIR.PaymentReconciliation");
+    expect(conditions.every(c => c.getTypeInfo().name === 'Condition')).to.be.true;
+    const paymentReconciliations = pt.findRecords('FHIR.PaymentReconciliation');
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it("should find records by model URL and type name (e.g., {http://hl7.org/fhir}Condition)", () => {
+  it('should find records by model URL and type name (e.g., {http://hl7.org/fhir}Condition)', () => {
     const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords("{http://hl7.org/fhir}Condition");
+    const conditions = pt.findRecords('{http://hl7.org/fhir}Condition');
     expect(conditions).to.have.length(8);
-    expect(conditions.every((c) => c.getTypeInfo().name === "Condition")).to.be
-      .true;
-    const paymentReconciliations = pt.findRecords(
-      "{http://hl7.org/fhir}PaymentReconciliation"
-    );
+    expect(conditions.every(c => c.getTypeInfo().name === 'Condition')).to.be.true;
+    const paymentReconciliations = pt.findRecords('{http://hl7.org/fhir}PaymentReconciliation');
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it("should find a single record", () => {
+  it('should find a single record', () => {
     const pt = patientSource.currentPatient();
-    const condition = pt.findRecord("Condition");
-    expect(condition.getTypeInfo().name).to.equal("Condition");
-    expect(condition.getId()).to.equal("9934bc4f-58af-4ecf-bb70-b7cc31987fc5");
-    const paymentReconciliation = pt.findRecord("PaymentReconciliation");
+    const condition = pt.findRecord('Condition');
+    expect(condition.getTypeInfo().name).to.equal('Condition');
+    expect(condition.getId()).to.equal('9934bc4f-58af-4ecf-bb70-b7cc31987fc5');
+    const paymentReconciliation = pt.findRecord('PaymentReconciliation');
     expect(paymentReconciliation).to.be.undefined;
   });
 
-  it("should support getId", () => {
+  it('should support getId', () => {
     const pt = patientSource.currentPatient();
     const procedure = pt
-      .findRecords("Procedure")
-      .find((p) => p.getId() === "03c48dbb-2e69-451d-877a-b3397a9f3d26");
-    expect(procedure.getId()).to.equal("03c48dbb-2e69-451d-877a-b3397a9f3d26");
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    expect(procedure.getId()).to.equal('03c48dbb-2e69-451d-877a-b3397a9f3d26');
   });
 
-  it("should support getCode", () => {
+  it('should support getCode', () => {
     const pt = patientSource.currentPatient();
     const procedure = pt
-      .findRecords("Procedure")
-      .find((p) => p.getId() === "03c48dbb-2e69-451d-877a-b3397a9f3d26");
-    expect(procedure.getCode("code")).to.deep.equal(
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    expect(procedure.getCode('code')).to.deep.equal(
       new cql.Code(
-        "428191000124101",
-        "http://snomed.info/sct",
+        '428191000124101',
+        'http://snomed.info/sct',
         undefined,
-        "Documentation of current medications"
+        'Documentation of current medications'
       )
     );
   });
 
-  it("should support getDate (DateTime)", () => {
+  it('should support getDate (DateTime)', () => {
     const pt = patientSource.currentPatient();
     const medReq = pt
-      .findRecords("MedicationRequest")
-      .find((p) => p.getId() === "622c5788-3028-41fd-a8cb-164f868d4322");
-    const authoredOn = medReq.getDate("authoredOn.value");
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const authoredOn = medReq.getDate('authoredOn.value');
     expect(authoredOn.isDateTime).to.be.true;
-    expect(authoredOn).to.deep.equal(
-      cql.DateTime.parse("2009-12-01T11:18:29-05:00")
-    );
+    expect(authoredOn).to.deep.equal(cql.DateTime.parse('2009-12-01T11:18:29-05:00'));
   });
 
-  it("should support getDate (Date)", () => {
+  it('should support getDate (Date)', () => {
     const pt = patientSource.currentPatient();
-    const birthDate = pt.getDate("birthDate.value");
+    const birthDate = pt.getDate('birthDate.value');
     expect(birthDate.isDate).to.be.true;
-    expect(birthDate).to.deep.equal(cql.DateTime.parse("2008-11-06").getDate());
+    expect(birthDate).to.deep.equal(cql.DateTime.parse('2008-11-06').getDate());
   });
 
-  it("should support getDateOrInterval (DateTime)", () => {
+  it('should support getDateOrInterval (DateTime)', () => {
     const pt = patientSource.currentPatient();
     const medReq = pt
-      .findRecords("MedicationRequest")
-      .find((p) => p.getId() === "622c5788-3028-41fd-a8cb-164f868d4322");
-    const authoredOn = medReq.getDateOrInterval("authoredOn.value");
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const authoredOn = medReq.getDateOrInterval('authoredOn.value');
     expect(authoredOn.isDateTime).to.be.true;
-    expect(authoredOn).to.deep.equal(
-      cql.DateTime.parse("2009-12-01T11:18:29-05:00")
-    );
+    expect(authoredOn).to.deep.equal(cql.DateTime.parse('2009-12-01T11:18:29-05:00'));
   });
 
-  it("should support getDateOrInterval (Date)", () => {
+  it('should support getDateOrInterval (Date)', () => {
     const pt = patientSource.currentPatient();
-    const birthDate = pt.getDateOrInterval("birthDate.value");
+    const birthDate = pt.getDateOrInterval('birthDate.value');
     expect(birthDate.isDate).to.be.true;
-    expect(birthDate).to.deep.equal(cql.DateTime.parse("2008-11-06").getDate());
+    expect(birthDate).to.deep.equal(cql.DateTime.parse('2008-11-06').getDate());
   });
 
-  it("should support dot-separated-paths", () => {
+  it('should support dot-separated-paths', () => {
     const pt = patientSource.currentPatient();
     const procedure = pt
-      .findRecords("Procedure")
-      .find((p) => p.getId() === "03c48dbb-2e69-451d-877a-b3397a9f3d26");
-    expect(procedure.get("subject.reference.value")).to.deep.equal(
-      "urn:uuid:356a0ab8-5592-4ec5-8c3a-9a4d0857b793"
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    expect(procedure.get('subject.reference.value')).to.deep.equal(
+      'urn:uuid:356a0ab8-5592-4ec5-8c3a-9a4d0857b793'
     );
   });
 
-  it("should support getting booleans", () => {
+  it('should support getting booleans', () => {
     const pt = patientSource.currentPatient();
     const immunization = pt
-      .findRecords("Immunization")
-      .find((p) => p.getId() === "2a986005-b7c9-464c-9da8-0a3220dd8721");
-    expect(immunization.get("primarySource.value")).to.be.true;
+      .findRecords('Immunization')
+      .find(p => p.getId() === '2a986005-b7c9-464c-9da8-0a3220dd8721');
+    expect(immunization.get('primarySource.value')).to.be.true;
   });
 
-  it("should support getting decimals", () => {
+  it('should support getting decimals', () => {
     const pt = patientSource.currentPatient();
     const claim = pt
-      .findRecords("Claim")
-      .find((p) => p.getId() === "58cd648a-5f4d-4306-bef4-49ec64c88c63");
-    expect(claim.get("total.value.value")).to.equal(687.08);
+      .findRecords('Claim')
+      .find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
+    expect(claim.get('total.value.value')).to.equal(687.08);
   });
 
-  it("should support getting integers", () => {
+  it('should support getting integers', () => {
     const pt = patientSource.currentPatient();
     const claim = pt
-      .findRecords("Claim")
-      .find((p) => p.getId() === "58cd648a-5f4d-4306-bef4-49ec64c88c63");
-    expect(claim.get("item")[0].get("sequence.value")).to.equal(1);
+      .findRecords('Claim')
+      .find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
+    expect(claim.get('item')[0].get('sequence.value')).to.equal(1);
   });
 
-  it("should support getting strings", () => {
+  it('should support getting strings', () => {
     const pt = patientSource.currentPatient();
     const procedure = pt
-      .findRecords("Procedure")
-      .find((p) => p.getId() === "03c48dbb-2e69-451d-877a-b3397a9f3d26");
-    expect(procedure.get("status.value")).to.deep.equal("completed");
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    expect(procedure.get('status.value')).to.deep.equal('completed');
   });
 
-  it("should support getting dateTimes", () => {
+  it('should support getting dateTimes', () => {
     const pt = patientSource.currentPatient();
     const medReq = pt
-      .findRecords("MedicationRequest")
-      .find((p) => p.getId() === "622c5788-3028-41fd-a8cb-164f868d4322");
-    const authoredOn = medReq.getDate("authoredOn.value");
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const authoredOn = medReq.getDate('authoredOn.value');
     expect(authoredOn.isDateTime).to.be.true;
-    expect(authoredOn).to.deep.equal(
-      cql.DateTime.parse("2009-12-01T11:18:29-05:00")
-    );
+    expect(authoredOn).to.deep.equal(cql.DateTime.parse('2009-12-01T11:18:29-05:00'));
   });
 
-  it("should support getting dates", () => {
+  it('should support getting dates', () => {
     const pt = patientSource.currentPatient();
-    const birthDate = pt.get("birthDate.value");
+    const birthDate = pt.get('birthDate.value');
     expect(birthDate.isDate).to.be.true;
-    expect(birthDate).to.deep.equal(cql.DateTime.parse("2008-11-06").getDate());
+    expect(birthDate).to.deep.equal(cql.DateTime.parse('2008-11-06').getDate());
   });
 
-  it("should support getting times", () => {
+  it('should support getting times', () => {
     const pt = patientSource.currentPatient();
     const observation = pt
-      .findRecords("Observation")
-      .find((p) => p.getId() === "9c15c801-6bb5-47a7-a9db-8bad0cb6aa68");
-    const valueTime = observation.get("value.value");
+      .findRecords('Observation')
+      .find(p => p.getId() === '9c15c801-6bb5-47a7-a9db-8bad0cb6aa68');
+    const valueTime = observation.get('value.value');
     expect(valueTime.isTime()).to.be.true;
-    expect(valueTime).to.deep.equal(
-      cql.DateTime.parse("0000-01-01T18:23:47.376-05:00").getTime()
-    );
+    expect(valueTime).to.deep.equal(cql.DateTime.parse('0000-01-01T18:23:47.376-05:00').getTime());
   });
 
-  it("should support getting an option of a choice", () => {
+  it('should support getting an option of a choice', () => {
     const pt = patientSource.currentPatient();
     const condition = pt
-      .findRecords("Condition")
-      .find((p) => p.getId() === "9934bc4f-58af-4ecf-bb70-b7cc31987fc5");
+      .findRecords('Condition')
+      .find(p => p.getId() === '9934bc4f-58af-4ecf-bb70-b7cc31987fc5');
     // In R4, you use the stub of the choice (e.g., onset[x] datetime is retrieved as onset)
-    expect(condition.get("onset.value")).to.deep.equal(
-      cql.DateTime.parse("2009-08-09T12:18:29-04:00")
+    expect(condition.get('onset.value')).to.deep.equal(
+      cql.DateTime.parse('2009-08-09T12:18:29-04:00')
     );
   });
 
-  it("should support id and extension on primitives", () => {
+  it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
     const encounter = pt
-      .findRecords("Encounter")
-      .find((p) => p.getId() === "9d911534-10d8-4dc2-91f1-d7aeed828af8");
-    expect(encounter.get("status.id")).to.equal("12345");
-    expect(compact(encounter.get("status.extension"))).to.deep.equal([
+      .findRecords('Encounter')
+      .find(p => p.getId() === '9d911534-10d8-4dc2-91f1-d7aeed828af8');
+    expect(encounter.get('status.id')).to.equal('12345');
+    expect(compact(encounter.get('status.extension'))).to.deep.equal([
       {
         url: {
-          value: "http://example.org/fhir/StructureDefinition/originalText",
+          value: 'http://example.org/fhir/StructureDefinition/originalText'
         },
-        value: { value: "completed" },
-      },
+        value: { value: 'completed' }
+      }
     ]);
   });
 
-  it("should support id on list of primitives", () => {
+  it('should support id on list of primitives', () => {
     const pt = patientSource.currentPatient();
-    expect(compact(pt.get("address")[0].get("line"))).to.deep.equal([
-      { value: "386 Stokes Center" },
-      { id: "2468", value: "Floor 5" },
-      { value: "Apt. C" },
+    expect(compact(pt.get('address')[0].get('line'))).to.deep.equal([
+      { value: '386 Stokes Center' },
+      { id: '2468', value: 'Floor 5' },
+      { value: 'Apt. C' }
     ]);
   });
 
-  it("should support _typeHierarchy", () => {
+  it('should support _typeHierarchy', () => {
     const pt = patientSource.currentPatient();
-    const condition = pt.findRecord("Condition");
+    const condition = pt.findRecord('Condition');
     expect(condition._typeHierarchy()).to.eql([
-      { name: "{http://hl7.org/fhir}Condition", type: "NamedTypeSpecifier" },
+      { name: '{http://hl7.org/fhir}Condition', type: 'NamedTypeSpecifier' },
       {
-        name: "{http://hl7.org/fhir}DomainResource",
-        type: "NamedTypeSpecifier",
+        name: '{http://hl7.org/fhir}DomainResource',
+        type: 'NamedTypeSpecifier'
       },
-      { name: "{http://hl7.org/fhir}Resource", type: "NamedTypeSpecifier" },
-      { name: "{urn:hl7-org:elm-types:r1}Any", type: "NamedTypeSpecifier" },
+      { name: '{http://hl7.org/fhir}Resource', type: 'NamedTypeSpecifier' },
+      { name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' }
     ]);
   });
 
-  it("should support _is", () => {
+  it('should support _is', () => {
     const pt = patientSource.currentPatient();
-    const condition = pt.findRecord("Condition");
+    const condition = pt.findRecord('Condition');
     expect(
       condition._is({
-        name: "{http://hl7.org/fhir}Condition",
-        type: "NamedTypeSpecifier",
+        name: '{http://hl7.org/fhir}Condition',
+        type: 'NamedTypeSpecifier'
       })
     ).to.be.true;
     expect(
       condition._is({
-        name: "{http://hl7.org/fhir}DomainResource",
-        type: "NamedTypeSpecifier",
+        name: '{http://hl7.org/fhir}DomainResource',
+        type: 'NamedTypeSpecifier'
       })
     ).to.be.true;
     expect(
       condition._is({
-        name: "{http://hl7.org/fhir}Resource",
-        type: "NamedTypeSpecifier",
+        name: '{http://hl7.org/fhir}Resource',
+        type: 'NamedTypeSpecifier'
       })
     ).to.be.true;
     expect(
       condition._is({
-        name: "{urn:hl7-org:elm-types:r1}Any",
-        type: "NamedTypeSpecifier",
+        name: '{urn:hl7-org:elm-types:r1}Any',
+        type: 'NamedTypeSpecifier'
       })
     ).to.be.true;
     expect(
       condition._is({
-        name: "{http://some.other.model.org}Condition",
-        type: "NamedTypeSpecifier",
+        name: '{http://some.other.model.org}Condition',
+        type: 'NamedTypeSpecifier'
       })
     ).to.be.false;
     expect(
       condition._is({
-        name: "{http://hl7.org/fhir}Observation",
-        type: "NamedTypeSpecifier",
+        name: '{http://hl7.org/fhir}Observation',
+        type: 'NamedTypeSpecifier'
       })
     ).to.be.false;
     expect(
       condition._is({
-        name: "{http://hl7.org/fhir}Condition",
-        type: "IntervalTypeSpecifier",
+        name: '{http://hl7.org/fhir}Condition',
+        type: 'IntervalTypeSpecifier'
       })
     ).to.be.false;
   });
 });
 
 describe(`Async Patient Source`, () => {
-  it("correctly returns patient data with valid currentPatient() call", async () => {
+  it('correctly returns patient data with valid currentPatient() call', async () => {
     const aps = cqlfhir.AsyncPatientSource.FHIRv401(TEST_SERVER_URL);
     nock(TEST_SERVER_URL)
       .get(`/Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
@@ -472,13 +449,11 @@ describe(`Async Patient Source`, () => {
 
     aps.loadPatientIds(TEST_PATIENT_SOURCE_IDS);
     const response = await aps.currentPatient();
-    expect(response.get("id").value).equal(patientLuna.entry[0].resource.id);
+    expect(response.get('id').value).equal(patientLuna.entry[0].resource.id);
   });
-  it("throws correct error for currentPatient() when server returns error", async () => {
+  it('throws correct error for currentPatient() when server returns error', async () => {
     const aps = cqlfhir.AsyncPatientSource.FHIRv401(TEST_SERVER_URL);
-    nock(TEST_SERVER_URL)
-      .get(`/Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
-      .reply(400);
+    nock(TEST_SERVER_URL).get(`/Patient/${TEST_PATIENT_SOURCE_IDS[0]}`).reply(400);
 
     aps.loadPatientIds(TEST_PATIENT_SOURCE_IDS);
     aps
@@ -486,13 +461,13 @@ describe(`Async Patient Source`, () => {
       .then(() => {
         expect.fail();
       })
-      .catch((e) => {
+      .catch(e => {
         expect(e.message).equal(
           `Unable to retrieve Patient/${TEST_PATIENT_SOURCE_IDS[0]} from server. Responded with error code: 400`
         );
       });
   });
-  it("correctly returns next patient data with valid nextPatient() call", async () => {
+  it('correctly returns next patient data with valid nextPatient() call', async () => {
     const aps = cqlfhir.AsyncPatientSource.FHIRv401(TEST_SERVER_URL);
     nock(TEST_SERVER_URL)
       .get(`/Patient/${TEST_PATIENT_SOURCE_IDS[1]}`)
@@ -500,12 +475,12 @@ describe(`Async Patient Source`, () => {
 
     aps.loadPatientIds(TEST_PATIENT_SOURCE_IDS);
     const response = await aps.nextPatient();
-    expect(response.get("id").value).equal(patientJohnnie.entry[0].resource.id);
+    expect(response.get('id').value).equal(patientJohnnie.entry[0].resource.id);
   });
 });
 
-describe("Async Patient", () => {
-  it("correctly executes a findRetrieves()", async () => {
+describe('Async Patient', () => {
+  it('correctly executes a findRetrieves()', async () => {
     nock(TEST_SERVER_URL)
       .get(`/Condition?_patient=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
       .reply(200, EXAMPLE_EMPTY_SEARCH);
@@ -520,16 +495,14 @@ describe("Async Patient", () => {
       TEST_SERVER_INSTANCE
     );
 
-    const records = await testPatient.findRecords("Condition");
-    const classInfo = modelInfo.findClass("Condition");
+    const records = await testPatient.findRecords('Condition');
+    const classInfo = modelInfo.findClass('Condition');
     expect(JSON.stringify(records)).equal(
-      JSON.stringify([
-        new cqlfhir.FHIRObject(conditionResource, classInfo, modelInfo),
-      ])
+      JSON.stringify([new cqlfhir.FHIRObject(conditionResource, classInfo, modelInfo)])
     );
   });
 
-  it("correctly fails on server error", async () => {
+  it('correctly fails on server error', async () => {
     nock(TEST_SERVER_URL)
       .get(`/Condition?_patient=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
       .reply(200, EXAMPLE_EMPTY_SEARCH);
@@ -545,10 +518,10 @@ describe("Async Patient", () => {
     );
 
     testPatient
-      .findRecords("Condition")
-      .catch((e) =>
+      .findRecords('Condition')
+      .catch(e =>
         expect(e.message).equal(
-          "Received status code: 400 when searching for Conditions which match query: _patient=Patient/356a0ab8-5592-4ec5-8c3a-9a4d0857b793"
+          'Received status code: 400 when searching for Conditions which match query: _patient=Patient/356a0ab8-5592-4ec5-8c3a-9a4d0857b793'
         )
       );
   });
@@ -556,8 +529,8 @@ describe("Async Patient", () => {
 
 function compact(obj) {
   if (Array.isArray(obj)) {
-    return obj.map((o) => compact(o));
-  } else if (obj == null || typeof obj !== "object") {
+    return obj.map(o => compact(o));
+  } else if (obj == null || typeof obj !== 'object') {
     return obj;
   }
   const compacted = {};

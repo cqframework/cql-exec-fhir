@@ -1,6 +1,6 @@
 const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
-const {expect} = require('chai');
+const { expect } = require('chai');
 
 const conditionResource = require('./fixtures/r4/Condition_f201.json');
 const patientLuna = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
@@ -55,7 +55,11 @@ describe('#FHIRWrapper_R4 v4.0.0', () => {
   });
 
   it('should error if requested type is incompatible', () => {
-    expect(function(){fhirWrapper.wrap(conditionResource, 'Observation');}).to.throw('Incompatible types: FHIR resourceType is Condition which cannot be cast as Observation');
+    expect(function () {
+      fhirWrapper.wrap(conditionResource, 'Observation');
+    }).to.throw(
+      'Incompatible types: FHIR resourceType is Condition which cannot be cast as Observation'
+    );
   });
 
   it('should wrap a fhir resource to the type specified if real type unknown', () => {
@@ -71,10 +75,7 @@ describe('#R4 v4.0.0', () => {
   });
 
   beforeEach(() => {
-    patientSource.loadBundles([
-      patientLuna,
-      patientJohnnie
-    ]);
+    patientSource.loadBundles([patientLuna, patientJohnnie]);
   });
 
   afterEach(() => patientSource.reset());
@@ -108,14 +109,16 @@ describe('#R4 v4.0.0', () => {
     expect(patientSource.currentPatient()).to.not.equal(patientSource.currentPatient());
   });
 
-  it('should find patient birthDate', () =>{
+  it('should find patient birthDate', () => {
     const pt = patientSource.currentPatient();
     // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use the .getDate() workaround
-    expect(compact(pt.get('birthDate'))).to.deep.equal({ value: new cql.DateTime.parse('2008-11-06').getDate() });
+    expect(compact(pt.get('birthDate'))).to.deep.equal({
+      value: new cql.DateTime.parse('2008-11-06').getDate()
+    });
     expect(pt.get('birthDate.value')).to.deep.equal(new cql.DateTime.parse('2008-11-06').getDate());
   });
 
-  it('should find patient extensions', () =>{
+  it('should find patient extensions', () => {
     const pt = patientSource.currentPatient();
     const extensions = pt.get('extension');
     expect(extensions).to.have.length(7);
@@ -143,7 +146,7 @@ describe('#R4 v4.0.0', () => {
     });
   });
 
-  it('should find records by type name (e.g., Condition)', () =>{
+  it('should find records by type name (e.g., Condition)', () => {
     const pt = patientSource.currentPatient();
     const conditions = pt.findRecords('Condition');
     expect(conditions).to.have.length(8);
@@ -152,7 +155,7 @@ describe('#R4 v4.0.0', () => {
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it('should find records by model name and type name (e.g., FHIR.Condition)', () =>{
+  it('should find records by model name and type name (e.g., FHIR.Condition)', () => {
     const pt = patientSource.currentPatient();
     const conditions = pt.findRecords('FHIR.Condition');
     expect(conditions).to.have.length(8);
@@ -161,7 +164,7 @@ describe('#R4 v4.0.0', () => {
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it('should find records by model URL and type name (e.g., {http://hl7.org/fhir}Condition)', () =>{
+  it('should find records by model URL and type name (e.g., {http://hl7.org/fhir}Condition)', () => {
     const pt = patientSource.currentPatient();
     const conditions = pt.findRecords('{http://hl7.org/fhir}Condition');
     expect(conditions).to.have.length(8);
@@ -170,7 +173,7 @@ describe('#R4 v4.0.0', () => {
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it('should find a single record', () =>{
+  it('should find a single record', () => {
     const pt = patientSource.currentPatient();
     const condition = pt.findRecord('Condition');
     expect(condition.getTypeInfo().name).to.equal('Condition');
@@ -181,19 +184,32 @@ describe('#R4 v4.0.0', () => {
 
   it('should support getId', () => {
     const pt = patientSource.currentPatient();
-    const procedure = pt.findRecords('Procedure').find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    const procedure = pt
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
     expect(procedure.getId()).to.equal('03c48dbb-2e69-451d-877a-b3397a9f3d26');
   });
 
   it('should support getCode', () => {
     const pt = patientSource.currentPatient();
-    const procedure = pt.findRecords('Procedure').find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
-    expect(procedure.getCode('code')).to.deep.equal(new cql.Code('428191000124101', 'http://snomed.info/sct', undefined, 'Documentation of current medications'));
+    const procedure = pt
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    expect(procedure.getCode('code')).to.deep.equal(
+      new cql.Code(
+        '428191000124101',
+        'http://snomed.info/sct',
+        undefined,
+        'Documentation of current medications'
+      )
+    );
   });
 
   it('should support getDate (DateTime)', () => {
     const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const medReq = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
     const authoredOn = medReq.getDate('authoredOn.value');
     expect(authoredOn.isDateTime).to.be.true;
     expect(authoredOn).to.deep.equal(cql.DateTime.parse('2009-12-01T11:18:29-05:00'));
@@ -208,7 +224,9 @@ describe('#R4 v4.0.0', () => {
 
   it('should support getDateOrInterval (DateTime)', () => {
     const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const medReq = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
     const authoredOn = medReq.getDateOrInterval('authoredOn.value');
     expect(authoredOn.isDateTime).to.be.true;
     expect(authoredOn).to.deep.equal(cql.DateTime.parse('2009-12-01T11:18:29-05:00'));
@@ -223,37 +241,51 @@ describe('#R4 v4.0.0', () => {
 
   it('should support dot-separated-paths', () => {
     const pt = patientSource.currentPatient();
-    const procedure = pt.findRecords('Procedure').find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
-    expect(procedure.get('subject.reference.value')).to.deep.equal('urn:uuid:356a0ab8-5592-4ec5-8c3a-9a4d0857b793');
+    const procedure = pt
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    expect(procedure.get('subject.reference.value')).to.deep.equal(
+      'urn:uuid:356a0ab8-5592-4ec5-8c3a-9a4d0857b793'
+    );
   });
 
   it('should support getting booleans', () => {
     const pt = patientSource.currentPatient();
-    const immunization = pt.findRecords('Immunization').find(p => p.getId() === '2a986005-b7c9-464c-9da8-0a3220dd8721');
+    const immunization = pt
+      .findRecords('Immunization')
+      .find(p => p.getId() === '2a986005-b7c9-464c-9da8-0a3220dd8721');
     expect(immunization.get('primarySource.value')).to.be.true;
   });
 
   it('should support getting decimals', () => {
     const pt = patientSource.currentPatient();
-    const claim = pt.findRecords('Claim').find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
+    const claim = pt
+      .findRecords('Claim')
+      .find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
     expect(claim.get('total.value.value')).to.equal(687.08);
   });
 
   it('should support getting integers', () => {
     const pt = patientSource.currentPatient();
-    const claim = pt.findRecords('Claim').find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
+    const claim = pt
+      .findRecords('Claim')
+      .find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
     expect(claim.get('item')[0].get('sequence.value')).to.equal(1);
   });
 
   it('should support getting strings', () => {
     const pt = patientSource.currentPatient();
-    const procedure = pt.findRecords('Procedure').find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
+    const procedure = pt
+      .findRecords('Procedure')
+      .find(p => p.getId() === '03c48dbb-2e69-451d-877a-b3397a9f3d26');
     expect(procedure.get('status.value')).to.deep.equal('completed');
   });
 
   it('should support getting dateTimes', () => {
     const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const medReq = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
     const authoredOn = medReq.getDate('authoredOn.value');
     expect(authoredOn.isDateTime).to.be.true;
     expect(authoredOn).to.deep.equal(cql.DateTime.parse('2009-12-01T11:18:29-05:00'));
@@ -268,7 +300,9 @@ describe('#R4 v4.0.0', () => {
 
   it('should support getting times', () => {
     const pt = patientSource.currentPatient();
-    const observation = pt.findRecords('Observation').find(p => p.getId() === '9c15c801-6bb5-47a7-a9db-8bad0cb6aa68');
+    const observation = pt
+      .findRecords('Observation')
+      .find(p => p.getId() === '9c15c801-6bb5-47a7-a9db-8bad0cb6aa68');
     const valueTime = observation.get('value.value');
     expect(valueTime.isTime()).to.be.true;
     expect(valueTime).to.deep.equal(cql.DateTime.parse('0000-01-01T18:23:47.376-05:00').getTime());
@@ -276,24 +310,39 @@ describe('#R4 v4.0.0', () => {
 
   it('should support getting an option of a choice', () => {
     const pt = patientSource.currentPatient();
-    const condition = pt.findRecords('Condition').find(p => p.getId() === '9934bc4f-58af-4ecf-bb70-b7cc31987fc5');
+    const condition = pt
+      .findRecords('Condition')
+      .find(p => p.getId() === '9934bc4f-58af-4ecf-bb70-b7cc31987fc5');
     // In R4, you use the stub of the choice (e.g., onset[x] datetime is retrieved as onset)
-    expect(condition.get('onset.value')).to.deep.equal(cql.DateTime.parse('2009-08-09T12:18:29-04:00'));
+    expect(condition.get('onset.value')).to.deep.equal(
+      cql.DateTime.parse('2009-08-09T12:18:29-04:00')
+    );
   });
 
   it('should support getting an option of a choice using explicit name', () => {
     // This was needed because the ModelInfo used to indicate MedicationRequest's primaryCodePath as medicationCodeableConcept!
     // Keep it in case anyone tries to load an older ModelInfo that still does that.
     const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const medReq = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
     const code = medReq.getCode('medicationCodeableConcept');
-    expect(code).to.deep.equal(new cql.Code('309097', 'http://www.nlm.nih.gov/research/umls/rxnorm', undefined, 'Cefuroxime 250 MG Oral Tablet'));
+    expect(code).to.deep.equal(
+      new cql.Code(
+        '309097',
+        'http://www.nlm.nih.gov/research/umls/rxnorm',
+        undefined,
+        'Cefuroxime 250 MG Oral Tablet'
+      )
+    );
   });
 
   it('should not return wrong type if explicit choice name was requested but data used different type', () => {
     // This is needed because the ModelInfo indicates MedicationRequest's primaryCodePath as medicationCodeableConcept!
     const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
+    const medReq = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4322');
     const ref = medReq.getCode('medicationReference');
     expect(ref).to.be.undefined;
   });
@@ -301,19 +350,25 @@ describe('#R4 v4.0.0', () => {
   it('should return undefined when attempting to get the code on a choice that is a reference', () => {
     // This was a bug that surfaced when testing some CQL against Synthea patients that use medicationReference
     const pt = patientSource.currentPatient();
-    const medReq = pt.findRecords('MedicationRequest').find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4323');
+    const medReq = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === '622c5788-3028-41fd-a8cb-164f868d4323');
     const ref = medReq.getCode('medication');
     expect(ref).to.be.undefined;
   });
 
   it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
-    const encounter = pt.findRecords('Encounter').find(p => p.getId() === '9d911534-10d8-4dc2-91f1-d7aeed828af8');
+    const encounter = pt
+      .findRecords('Encounter')
+      .find(p => p.getId() === '9d911534-10d8-4dc2-91f1-d7aeed828af8');
     expect(encounter.get('status.id')).to.equal('12345');
-    expect(compact(encounter.get('status.extension'))).to.deep.equal([ {
-      url: { value: 'http://example.org/fhir/StructureDefinition/originalText' },
-      value: { value: 'completed' }
-    }]);
+    expect(compact(encounter.get('status.extension'))).to.deep.equal([
+      {
+        url: { value: 'http://example.org/fhir/StructureDefinition/originalText' },
+        value: { value: 'completed' }
+      }
+    ]);
   });
 
   it('should support id on list of primitives', () => {
@@ -332,20 +387,29 @@ describe('#R4 v4.0.0', () => {
       { name: '{http://hl7.org/fhir}Condition', type: 'NamedTypeSpecifier' },
       { name: '{http://hl7.org/fhir}DomainResource', type: 'NamedTypeSpecifier' },
       { name: '{http://hl7.org/fhir}Resource', type: 'NamedTypeSpecifier' },
-      { name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' },
+      { name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' }
     ]);
   });
 
   it('should support _is', () => {
     const pt = patientSource.currentPatient();
     const condition = pt.findRecord('Condition');
-    expect(condition._is({name: '{http://hl7.org/fhir}Condition', type: 'NamedTypeSpecifier'})).to.be.true;
-    expect(condition._is({name: '{http://hl7.org/fhir}DomainResource', type: 'NamedTypeSpecifier'})).to.be.true;
-    expect(condition._is({name: '{http://hl7.org/fhir}Resource', type: 'NamedTypeSpecifier'})).to.be.true;
-    expect(condition._is({name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier'})).to.be.true;
-    expect(condition._is({name: '{http://some.other.model.org}Condition', type: 'NamedTypeSpecifier'})).to.be.false;
-    expect(condition._is({name: '{http://hl7.org/fhir}Observation', type: 'NamedTypeSpecifier'})).to.be.false;
-    expect(condition._is({name: '{http://hl7.org/fhir}Condition', type: 'IntervalTypeSpecifier'})).to.be.false;
+    expect(condition._is({ name: '{http://hl7.org/fhir}Condition', type: 'NamedTypeSpecifier' })).to
+      .be.true;
+    expect(
+      condition._is({ name: '{http://hl7.org/fhir}DomainResource', type: 'NamedTypeSpecifier' })
+    ).to.be.true;
+    expect(condition._is({ name: '{http://hl7.org/fhir}Resource', type: 'NamedTypeSpecifier' })).to
+      .be.true;
+    expect(condition._is({ name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' })).to
+      .be.true;
+    expect(
+      condition._is({ name: '{http://some.other.model.org}Condition', type: 'NamedTypeSpecifier' })
+    ).to.be.false;
+    expect(condition._is({ name: '{http://hl7.org/fhir}Observation', type: 'NamedTypeSpecifier' }))
+      .to.be.false;
+    expect(condition._is({ name: '{http://hl7.org/fhir}Condition', type: 'IntervalTypeSpecifier' }))
+      .to.be.false;
   });
 });
 
@@ -361,7 +425,6 @@ function compact(obj) {
     if (value !== undefined) {
       compacted[prop] = compact(value);
     }
-
   }
   return compacted;
 }

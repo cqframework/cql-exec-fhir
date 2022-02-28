@@ -1,11 +1,11 @@
-const axios = require("axios");
-const cql = require("cql-execution");
-const load = require("./load");
-const patientCompartmentDefinition = require("./compartmentdefinition-patient.json");
-const FHIRv102XML = require("./modelInfos/fhir-modelinfo-1.0.2.xml.js");
-const FHIRv300XML = require("./modelInfos/fhir-modelinfo-3.0.0.xml.js");
-const FHIRv400XML = require("./modelInfos/fhir-modelinfo-4.0.0.xml.js");
-const FHIRv401XML = require("./modelInfos/fhir-modelinfo-4.0.1.xml.js");
+const axios = require('axios');
+const cql = require('cql-execution');
+const load = require('./load');
+const patientCompartmentDefinition = require('./compartmentdefinition-patient.json');
+const FHIRv102XML = require('./modelInfos/fhir-modelinfo-1.0.2.xml.js');
+const FHIRv300XML = require('./modelInfos/fhir-modelinfo-3.0.0.xml.js');
+const FHIRv400XML = require('./modelInfos/fhir-modelinfo-4.0.0.xml.js');
+const FHIRv401XML = require('./modelInfos/fhir-modelinfo-4.0.1.xml.js');
 
 class FHIRWrapper {
   constructor(filePathOrXML) {
@@ -115,9 +115,9 @@ class AsyncPatientSource {
       baseURL: serverUrl,
       timeout: 10000,
       headers: {
-        "Content-Type": "application/fhir+json",
-        accept: "application/fhir+json",
-      },
+        'Content-Type': 'application/fhir+json',
+        accept: 'application/fhir+json'
+      }
     });
   }
 
@@ -154,11 +154,7 @@ class AsyncPatientSource {
           `Unable to retrieve Patient/${id} from server. Responded with error code: ${response.status}`
         );
       } else {
-        return new AsyncPatient(
-          response.data,
-          this._modelInfo,
-          this.fhirServer
-        );
+        return new AsyncPatient(response.data, this._modelInfo, this.fhirServer);
       }
     }
   }
@@ -183,7 +179,7 @@ class FHIRObject {
     Object.defineProperties(this, {
       _json: { value: json, enumerable: false },
       _typeInfo: { value: typeInfo, enumerable: false },
-      _modelInfo: { value: modelInfo, enumerable: false },
+      _modelInfo: { value: modelInfo, enumerable: false }
     });
     if (typeInfo == null) {
       console.error(`Failed to locate typeInfo for ${json}`);
@@ -192,7 +188,7 @@ class FHIRObject {
 
     const elementNames = new Set();
     for (let currentInfo = typeInfo; currentInfo != null; ) {
-      currentInfo.elements.forEach((e) => elementNames.add(e.name));
+      currentInfo.elements.forEach(e => elementNames.add(e.name));
       if (currentInfo.baseTypeSpecifier != null) {
         currentInfo = modelInfo.findClass(currentInfo.baseTypeSpecifier.fqn);
       } else {
@@ -205,7 +201,7 @@ class FHIRObject {
         get: function () {
           return this.get(name);
         },
-        enumerable: true,
+        enumerable: true
       });
     }
   }
@@ -217,21 +213,17 @@ class FHIRObject {
       return this._json;
     }
 
-    const parts = field.split(".");
+    const parts = field.split('.');
     const root = parts[0];
-    const suffix = parts.length > 1 ? parts.splice(1).join(".") : undefined;
+    const suffix = parts.length > 1 ? parts.splice(1).join('.') : undefined;
     const element = this._typeInfo.findElement(root, true); // true: support explicit choices
-    if (typeof element === "undefined") {
-      console.error(
-        `Failed to locate element for ${this._typeInfo.name}.${root}`
-      );
+    if (typeof element === 'undefined') {
+      console.error(`Failed to locate element for ${this._typeInfo.name}.${root}`);
       return;
     }
 
     const choicePropertyName = function (element, choice) {
-      return `${element.name}${choice.name[0].toUpperCase()}${choice.name.slice(
-        1
-      )}`;
+      return `${element.name}${choice.name[0].toUpperCase()}${choice.name.slice(1)}`;
     };
 
     let property, typeSpecifier;
@@ -241,7 +233,7 @@ class FHIRObject {
       // and use it. We don't want other choices, even if they're in the data.
       property = root; // keep the explicit name
       typeSpecifier = element.typeSpecifier.choices.find(
-        (c) => property === choicePropertyName(element, c)
+        c => property === choicePropertyName(element, c)
       );
     } else {
       property = element.name;
@@ -252,10 +244,7 @@ class FHIRObject {
         for (const choice of typeSpecifier.choices) {
           if (choice.isNamed) {
             const choiceProperty = choicePropertyName(element, choice);
-            if (
-              this._json[choiceProperty] != null ||
-              this._json[`_${choiceProperty}`] != null
-            ) {
+            if (this._json[choiceProperty] != null || this._json[`_${choiceProperty}`] != null) {
               property = choiceProperty;
               typeSpecifier = choice;
               break;
@@ -265,7 +254,7 @@ class FHIRObject {
       }
     }
 
-    if (typeSpecifier.namespace === "System") {
+    if (typeSpecifier.namespace === 'System') {
       // TODO: If there is a suffix, we need to drill into the CQL system type!
       if (suffix != null) {
         console.error(
@@ -276,12 +265,7 @@ class FHIRObject {
       return toSystemObject(this._json[property], typeSpecifier.name);
     }
 
-    const data = getPropertyFromJSON(
-      this._json,
-      property,
-      typeSpecifier,
-      this._modelInfo
-    );
+    const data = getPropertyFromJSON(this._json, property, typeSpecifier, this._modelInfo);
     if (data == null) {
       // preserve distinction between null or undefined
       return data;
@@ -338,23 +322,20 @@ class FHIRObject {
 
   _is(typeSpecifier) {
     return this._typeHierarchy().some(
-      (t) => t.type === typeSpecifier.type && t.name == typeSpecifier.name
+      t => t.type === typeSpecifier.type && t.name == typeSpecifier.name
     );
   }
 
   _typeHierarchy() {
     let typeHierarchy = [];
     if (this.getTypeInfo() != null) {
-      typeHierarchy = [
-        this.getTypeInfo(),
-        ...this.getTypeInfo().parentClasses(),
-      ].map((c) => {
+      typeHierarchy = [this.getTypeInfo(), ...this.getTypeInfo().parentClasses()].map(c => {
         // Account for when the namespace comes in as the model name rather than the model url
         let namespace = c.namespace;
         if (namespace === c.modelInfo.name) {
           namespace = c.modelInfo.url;
-        } else if (namespace === "System") {
-          namespace = "urn:hl7-org:elm-types:r1";
+        } else if (namespace === 'System') {
+          namespace = 'urn:hl7-org:elm-types:r1';
         }
         // Account for when the name is prefixed by the model name and a dot
         let name = c.name;
@@ -363,14 +344,14 @@ class FHIRObject {
         }
         name = `{${namespace}}${name}`;
         // At this point, all the FHIR models are considered named types
-        return { name, type: "NamedTypeSpecifier" };
+        return { name, type: 'NamedTypeSpecifier' };
       });
     }
     // TODO: This currently doesn't include System types in the hierarchy.  We should fix this in the parentClasses
     // function, but until then, we know that everything eventually inherits from System.Any, so force that here:
     typeHierarchy.push({
-      name: "{urn:hl7-org:elm-types:r1}Any",
-      type: "NamedTypeSpecifier",
+      name: '{urn:hl7-org:elm-types:r1}Any',
+      type: 'NamedTypeSpecifier'
     });
     return typeHierarchy;
   }
@@ -385,16 +366,14 @@ class Patient extends FHIRObject {
     const patientClass = modelInfo.patientClassIdentifier
       ? modelInfo.patientClassIdentifier
       : modelInfo.patientClassName;
-    const resourceType = modelInfo.patientClassName.replace(/^FHIR\./, "");
-    const ptEntry = bundle.entry.find(
-      (e) => e.resource && e.resource.resourceType == resourceType
-    );
+    const resourceType = modelInfo.patientClassName.replace(/^FHIR\./, '');
+    const ptEntry = bundle.entry.find(e => e.resource && e.resource.resourceType == resourceType);
     const ptClass = modelInfo.findClass(patientClass);
     super(ptEntry.resource, ptClass, modelInfo);
     // Define a "private" un-enumerable property to hold the bundle
-    Object.defineProperty(this, "_bundle", {
+    Object.defineProperty(this, '_bundle', {
       value: bundle,
-      enumerable: false,
+      enumerable: false
     });
   }
 
@@ -411,12 +390,12 @@ class Patient extends FHIRObject {
       console.error(`Failed to find type info for ${profile}`);
       return [];
     }
-    const resourceType = classInfo.name.replace(/^FHIR\./, "");
+    const resourceType = classInfo.name.replace(/^FHIR\./, '');
     const records = this._bundle.entry
-      .filter((e) => {
+      .filter(e => {
         return e.resource && e.resource.resourceType == resourceType;
       })
-      .map((e) => {
+      .map(e => {
         return new FHIRObject(e.resource, classInfo, this._modelInfo);
       });
     return records;
@@ -432,13 +411,13 @@ class AsyncPatient extends FHIRObject {
     super(patientData, ptClass, modelInfo);
 
     // Define a "private" un-enumerable property to hold the patient data
-    Object.defineProperty(this, "_patientData", {
+    Object.defineProperty(this, '_patientData', {
       value: patientData,
-      enumerable: false,
+      enumerable: false
     });
-    Object.defineProperty(this, "_serverData", {
+    Object.defineProperty(this, '_serverData', {
       value: serverData,
-      enumerable: false,
+      enumerable: false
     });
   }
 
@@ -449,18 +428,16 @@ class AsyncPatient extends FHIRObject {
       return [];
     }
     console.log(classInfo.name);
-    const resourceType = classInfo.name.replace(/^FHIR\./, "");
+    const resourceType = classInfo.name.replace(/^FHIR\./, '');
     console.log(resourceType);
 
     const compartmentInfo = patientCompartmentDefinition.resource.filter(
-      (def) => def.code === resourceType
+      def => def.code === resourceType
     );
     if (!compartmentInfo[0].param) {
-      console.error(
-        `Resource type: ${resourceType} cannot reference a patient.`
-      );
+      console.error(`Resource type: ${resourceType} cannot reference a patient.`);
     }
-    let records = compartmentInfo[0].param.map(async (searchTerm) => {
+    let records = compartmentInfo[0].param.map(async searchTerm => {
       const response = await this._serverData.get(
         `/${resourceType}?_${searchTerm}=Patient/${this._patientData.id}`
       );
@@ -477,9 +454,7 @@ class AsyncPatient extends FHIRObject {
     });
 
     records = await Promise.all(records);
-    records = records
-      .flat()
-      .map((r) => new FHIRObject(r, classInfo, this._modelInfo));
+    records = records.flat().map(r => new FHIRObject(r, classInfo, this._modelInfo));
     return records;
   }
 }
@@ -503,10 +478,8 @@ function getPropertyFromJSON(json, property, typeSpecifier, modelInfo) {
   // Special handling for FHIR ids and extensions on primitives.
   if (isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo)) {
     // Normalize (or copy) to arrays to better share code between lists and non-lists
-    const valueArr =
-      typeSpecifier.isList && Array.isArray(value) ? [...value] : [value];
-    const extraArr =
-      typeSpecifier.isList && Array.isArray(extra) ? [...extra] : [extra];
+    const valueArr = typeSpecifier.isList && Array.isArray(value) ? [...value] : [value];
+    const extraArr = typeSpecifier.isList && Array.isArray(extra) ? [...extra] : [extra];
     // Make sure arrays are of same length for easier processing
     while (valueArr.length > extraArr.length) {
       extraArr.push(undefined);
@@ -518,7 +491,7 @@ function getPropertyFromJSON(json, property, typeSpecifier, modelInfo) {
     const data = [];
     for (let i = 0; i < valueArr.length; i++) {
       let item = {};
-      if (typeof valueArr[i] !== "undefined") {
+      if (typeof valueArr[i] !== 'undefined') {
         item.value = valueArr[i];
       }
       if (extraArr[i] != null) {
@@ -540,7 +513,7 @@ function isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo) {
   if (typeSpecifier.isNamed) {
     // If its namespace is FHIR and its name starts w/ a lowercase letter, it's a FHIR primitive
     if (
-      typeSpecifier.namespace === "FHIR" &&
+      typeSpecifier.namespace === 'FHIR' &&
       typeSpecifier.name[0].toLowerCase() === typeSpecifier.name[0]
     ) {
       return true;
@@ -551,18 +524,15 @@ function isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo) {
     if (
       typeInfo &&
       typeInfo.baseTypeSpecifier &&
-      typeInfo.baseTypeSpecifier.fqn === "FHIR.Element" &&
+      typeInfo.baseTypeSpecifier.fqn === 'FHIR.Element' &&
       typeInfo.elements.length === 1
     ) {
-      const property = typeInfo.findElement("value");
-      return property && property.typeSpecifier.fqn === "System.String";
+      const property = typeInfo.findElement('value');
+      return property && property.typeSpecifier.fqn === 'System.String';
     }
     return false;
   } else if (typeSpecifier.isList) {
-    return isFHIRPrimitiveOrListOfFHIRPrimitives(
-      typeSpecifier.elementType,
-      modelInfo
-    );
+    return isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier.elementType, modelInfo);
   }
   return false;
 }
@@ -580,31 +550,27 @@ function toSystemObject(data, name) {
   }
 
   switch (name) {
-    case "Boolean":
-    case "Decimal":
-    case "Integer":
-    case "String":
+    case 'Boolean':
+    case 'Decimal':
+    case 'Integer':
+    case 'String':
       return data;
-    case "Code":
-    case "Concept":
-    case "Quantity":
+    case 'Code':
+    case 'Concept':
+    case 'Quantity':
       // Currently, these aren't used as leaf nodes in the FHIR model infos!
       return;
-    case "DateTime":
+    case 'DateTime':
       // CQL DateTime doesn't support 'Z' right now, so account for that.
-      return cql.DateTime.parse(data.replace("Z", "+00:00"));
-    case "Date":
+      return cql.DateTime.parse(data.replace('Z', '+00:00'));
+    case 'Date':
       // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use this workaround
-      return cql.DateTime.parse(data) != null
-        ? cql.DateTime.parse(data).getDate()
-        : undefined;
-    case "Time": {
+      return cql.DateTime.parse(data) != null ? cql.DateTime.parse(data).getDate() : undefined;
+    case 'Time': {
       // CQL DateTime doesn't support 'Z' right now, so account for that. In addition Time should not
       // have an offset, so clear the offset as well.
       // NOTE: Current CQL execution treats time as a DateTime w/ date fixed to 0000-01-01.
-      const time = cql.DateTime.parse(
-        `0000-01-01T${data.replace("Z", "+00:00")}`
-      );
+      const time = cql.DateTime.parse(`0000-01-01T${data.replace('Z', '+00:00')}`);
       time.timezoneOffset = null;
       return time;
     }
@@ -634,12 +600,10 @@ function toFHIRObject(data, typeSpecifier, modelInfo, suffix) {
     return rootObject;
   } else if (typeSpecifier.isList) {
     if (suffix != null) {
-      console.error("List type found in the middle of a path.");
+      console.error('List type found in the middle of a path.');
       return;
     }
-    return data.map((item) =>
-      toFHIRObject(item, typeSpecifier.elementType, modelInfo)
-    );
+    return data.map(item => toFHIRObject(item, typeSpecifier.elementType, modelInfo));
   } else if (typeSpecifier.isInterval) {
     return new cql.Interval(
       toFHIRObject(data.low, typeSpecifier.pointType, modelInfo),
@@ -664,25 +628,25 @@ function toCode(f) {
   }
 
   if (Array.isArray(f)) {
-    return f.map((c) => toCode(c));
+    return f.map(c => toCode(c));
   }
-  const typeName = f.getTypeInfo().name.replace(/^FHIR\./, "");
-  if (typeName === "CodeableConcept") {
+  const typeName = f.getTypeInfo().name.replace(/^FHIR\./, '');
+  if (typeName === 'CodeableConcept') {
     if (f.coding == null) {
       // preserve distinction between null or undefined
       return f.coding;
     } else {
-      const codings = f.coding.map((c) => toCode(c));
+      const codings = f.coding.map(c => toCode(c));
       return codings.length === 1 ? codings[0] : codings;
     }
-  } else if (typeName === "Coding") {
+  } else if (typeName === 'Coding') {
     return new cql.Code(
       f.code ? f.code.value : f.code,
       f.system ? f.system.value : f.system,
       f.version ? f.version.value : f.version,
       f.display ? f.display.value : f.display
     );
-  } else if (typeName === "code") {
+  } else if (typeName === 'code') {
     return f.value;
   }
 }
@@ -693,5 +657,5 @@ module.exports = {
   AsyncPatientSource,
   Patient,
   AsyncPatient,
-  FHIRObject,
+  FHIRObject
 };

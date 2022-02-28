@@ -16,10 +16,13 @@
     "test:watch": "npm test -- --watch",
     "test:debug": "./node_modules/.bin/mocha --inspect --debug-brk --reporter spec --recursive",
     "lint": "./node_modules/.bin/eslint .",
-    "lint:fix": "./node_modules/.bin/eslint . --fix"
+    "lint:fix": "./node_modules/.bin/eslint . --fix",
+    "prettier": "prettier --check \"**/*.{js,ts}\"",
+    "prettier:fix": "prettier --write \"**/*.{js,ts}\""
   },
   "dependencies": {
     "axios": "^0.26.0",
+    "prettier": "^2.5.1",
     "xml2js": "~0.4.23"
   },
   "devDependencies": {
