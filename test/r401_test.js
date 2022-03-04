@@ -33,7 +33,7 @@ const EXAMPLE_NON_EMPTY_SEARCH = {
   resourceType: 'Bundle',
   type: 'searchset',
   total: 1,
-  entry: [conditionResource]
+  entry: [{ resource: conditionResource }]
 };
 
 describe('#FHIRWrapper_R4 v4.0.1', () => {
@@ -482,11 +482,11 @@ describe(`Async Patient Source`, () => {
 describe('Async Patient', () => {
   it('correctly executes a findRetrieves()', async () => {
     nock(TEST_SERVER_URL)
-      .get(`/Condition?_patient=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
+      .get(`/Condition?patient=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
       .reply(200, EXAMPLE_EMPTY_SEARCH);
 
     nock(TEST_SERVER_URL)
-      .get(`/Condition?_asserter=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
+      .get(`/Condition?asserter=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
       .reply(200, EXAMPLE_NON_EMPTY_SEARCH);
     const modelInfo = load(FHIRv401XML);
     const testPatient = new cqlfhir.AsyncPatient(
@@ -504,10 +504,10 @@ describe('Async Patient', () => {
 
   it('correctly fails on server error', async () => {
     nock(TEST_SERVER_URL)
-      .get(`/Condition?_patient=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
+      .get(`/Condition?patient=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
       .reply(200, EXAMPLE_EMPTY_SEARCH);
     nock(TEST_SERVER_URL)
-      .get(`/Condition?_patient=Patient/${TEST_PATIENT_SOURCE_IDS[1]}`)
+      .get(`/Condition?patient=Patient/${TEST_PATIENT_SOURCE_IDS[1]}`)
       .reply(400);
 
     const modelInfo = load(FHIRv401XML);

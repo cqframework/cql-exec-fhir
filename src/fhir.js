@@ -428,7 +428,7 @@ class AsyncPatient extends FHIRObject {
       return [];
     }
     const resourceType = classInfo.name.replace(/^FHIR\./, '');
-    // If the patient resource type is request, return array with just this resource
+    // If the patient resource type is requested, return array with just this resource
     if (resourceType === 'Patient') {
       return [this];
     }
