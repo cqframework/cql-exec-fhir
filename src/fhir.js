@@ -427,9 +427,11 @@ class AsyncPatient extends FHIRObject {
       console.error(`Failed to find type info for ${profile}`);
       return [];
     }
-    console.log(classInfo.name);
     const resourceType = classInfo.name.replace(/^FHIR\./, '');
-    console.log(resourceType);
+    // If the patient resource type is request, return array with just this resource
+    if (resourceType === 'Patient') {
+      return [this];
+    }
 
     const compartmentInfo = patientCompartmentDefinition.resource.filter(
       def => def.code === resourceType
@@ -438,16 +440,15 @@ class AsyncPatient extends FHIRObject {
       console.error(`Resource type: ${resourceType} cannot reference a patient.`);
     }
     let records = compartmentInfo[0].param.map(async searchTerm => {
-      const response = await this._serverData.get(
-        `/${resourceType}?_${searchTerm}=Patient/${this._patientData.id}`
-      );
+      const request = `/${resourceType}?${searchTerm}=Patient/${this._patientData.id}`;
+      const response = await this._serverData.get(request);
       if (response.status !== 200) {
         throw new Error(
           `Received status code: ${response.status} when searching for ${resourceType}s which match query: ${query}`
         );
       }
       if (response.data.total > 0) {
-        const resources = response.data.entry;
+        const resources = response.data.entry.map(e => e.resource);
         return resources;
       }
       return [];
