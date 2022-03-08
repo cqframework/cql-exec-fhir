@@ -436,8 +436,8 @@ class AsyncPatient extends FHIRObject {
     const compartmentInfo = patientCompartmentDefinition.resource.filter(
       def => def.code === resourceType
     );
-    if (!compartmentInfo[0].param) {
-      console.error(`Resource type: ${resourceType} cannot reference a patient.`);
+    if (!compartmentInfo[0]) {
+      throw new Error(`Resource type: ${resourceType} cannot reference a patient.`);
     }
     let records = compartmentInfo[0].param.map(async searchTerm => {
       const request = `/${resourceType}?${searchTerm}=Patient/${this._patientData.id}`;
