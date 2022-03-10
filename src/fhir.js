@@ -111,7 +111,7 @@ class AsyncPatientSource {
     this._index = 0;
     this._patientIds = [];
     this._modelInfo = load(filePathOrXML);
-    this.fhirServer = axios.create({
+    this.fhirClient = axios.create({
       baseURL: serverUrl,
       timeout: 10000,
       headers: {
@@ -148,13 +148,13 @@ class AsyncPatientSource {
   async currentPatient() {
     if (this._index < this._patientIds.length) {
       const id = this._patientIds[this._index];
-      const response = await this.fhirServer.get(`/Patient/${id}`);
-      if (response.status !== 200) {
+      try {
+        const response = await this.fhirClient.get(`/Patient/${id}`);
+        return new AsyncPatient(response.data, this._modelInfo, this.fhirClient);
+      } catch (e) {
         throw new Error(
-          `Unable to retrieve Patient/${id} from server. Responded with error code: ${response.status}`
+          `Unable to retrieve Patient/${id} from server. Responded with message: ${e.message}`
         );
-      } else {
-        return new AsyncPatient(response.data, this._modelInfo, this.fhirServer);
       }
     }
   }
@@ -403,7 +403,7 @@ class Patient extends FHIRObject {
 }
 
 class AsyncPatient extends FHIRObject {
-  constructor(patientData, modelInfo, serverData) {
+  constructor(patientData, modelInfo, fhirClient) {
     const patientClass = modelInfo.patientClassIdentifier
       ? modelInfo.patientClassIdentifier
       : modelInfo.patientClassName;
@@ -415,10 +415,7 @@ class AsyncPatient extends FHIRObject {
       value: patientData,
       enumerable: false
     });
-    Object.defineProperty(this, '_serverData', {
-      value: serverData,
-      enumerable: false
-    });
+    this.fhirClient = fhirClient;
   }
 
   async findRecords(profile) {
@@ -437,14 +434,19 @@ class AsyncPatient extends FHIRObject {
       def => def.code === resourceType
     );
     if (!compartmentInfo[0]) {
-      throw new Error(`Resource type: ${resourceType} cannot reference a patient.`);
+      if (response.data.total > 0) {
+        const request = `/${resourceType}`;
+        const response = await this.fhirClient.get(request);
+        const resources = response.data.entry.map(e => e.resource);
+        return resources;
+      }
     }
     let records = compartmentInfo[0].param.map(async searchTerm => {
       const request = `/${resourceType}?${searchTerm}=Patient/${this._patientData.id}`;
-      const response = await this._serverData.get(request);
+      const response = await this.fhirClient.get(request);
       if (response.status !== 200) {
         throw new Error(
-          `Received status code: ${response.status} when searching for ${resourceType}s which match query: ${query}`
+          `Received status code: ${response.status} when searching for ${resourceType}s using request: ${request}`
         );
       }
       if (response.data.total > 0) {

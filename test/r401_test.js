@@ -480,7 +480,7 @@ describe(`Async Patient Source`, () => {
 });
 
 describe('Async Patient', () => {
-  it('correctly executes a findRetrieves()', async () => {
+  it('correctly executes a findRecords()', async () => {
     nock(TEST_SERVER_URL)
       .get(`/Condition?patient=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
       .reply(200, EXAMPLE_EMPTY_SEARCH);
