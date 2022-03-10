@@ -433,14 +433,12 @@ class AsyncPatient extends FHIRObject {
     const compartmentInfo = patientCompartmentDefinition.resource.filter(
       def => def.code === resourceType
     );
-    let records;
+    let records = [];
     if (!compartmentInfo[0] || !compartmentInfo[0].param) {
       const request = `/${resourceType}`;
       const response = await this.fhirClient.get(request);
       if (response.data.total > 0) {
         records = response.data.entry.map(e => e.resource);
-      } else {
-        records = [];
       }
     } else {
       records = compartmentInfo[0].param.map(async searchTerm => {
