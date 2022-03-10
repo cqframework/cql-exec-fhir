@@ -433,30 +433,32 @@ class AsyncPatient extends FHIRObject {
     const compartmentInfo = patientCompartmentDefinition.resource.filter(
       def => def.code === resourceType
     );
-    if (!compartmentInfo[0]) {
-      if (response.data.total > 0) {
-        const request = `/${resourceType}`;
-        const response = await this.fhirClient.get(request);
-        const resources = response.data.entry.map(e => e.resource);
-        return resources;
-      }
-    }
-    let records = compartmentInfo[0].param.map(async searchTerm => {
-      const request = `/${resourceType}?${searchTerm}=Patient/${this._patientData.id}`;
+    let records;
+    if (!compartmentInfo[0] || !compartmentInfo[0].param) {
+      const request = `/${resourceType}`;
       const response = await this.fhirClient.get(request);
-      if (response.status !== 200) {
-        throw new Error(
-          `Received status code: ${response.status} when searching for ${resourceType}s using request: ${request}`
-        );
-      }
       if (response.data.total > 0) {
-        const resources = response.data.entry.map(e => e.resource);
-        return resources;
+        records = response.data.entry.map(e => e.resource);
+      } else {
+        records = [];
       }
-      return [];
-    });
-
-    records = await Promise.all(records);
+    } else {
+      records = compartmentInfo[0].param.map(async searchTerm => {
+        const request = `/${resourceType}?${searchTerm}=Patient/${this._patientData.id}`;
+        const response = await this.fhirClient.get(request);
+        if (response.status !== 200) {
+          throw new Error(
+            `Received status code: ${response.status} when searching for ${resourceType}s using request: ${request}`
+          );
+        }
+        if (response.data.total > 0) {
+          const resources = response.data.entry.map(e => e.resource);
+          return resources;
+        }
+        return [];
+      });
+      records = await Promise.all(records);
+    }
     records = records.flat().map(r => new FHIRObject(r, classInfo, this._modelInfo));
     return records;
   }

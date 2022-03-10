@@ -6,6 +6,7 @@ const axios = require('axios');
 const load = require('../src/load');
 
 const conditionResource = require('./fixtures/r4/Condition_f201.json');
+const locationResource = require('./fixtures/r4/Location.json');
 const patientLuna = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
 const patientJohnnie = require('./fixtures/r4/Johnnie679_Hermiston71_2cd30bd6-3a87-4191-af90-6daa70f58f55.json');
 const FHIRv401XML = require('../src/modelInfos/fhir-modelinfo-4.0.1.xml.js');
@@ -29,11 +30,17 @@ const EXAMPLE_EMPTY_SEARCH = {
   type: 'searchset',
   total: 0
 };
-const EXAMPLE_NON_EMPTY_SEARCH = {
+const EXAMPLE_NON_EMPTY_CONDITION_SEARCH = {
   resourceType: 'Bundle',
   type: 'searchset',
   total: 1,
   entry: [{ resource: conditionResource }]
+};
+const EXAMPLE_NON_EMPTY_LOCATION_SEARCH = {
+  resourceType: 'Bundle',
+  type: 'searchset',
+  total: 1,
+  entry: [{ resource: locationResource }]
 };
 
 describe('#FHIRWrapper_R4 v4.0.1', () => {
@@ -487,7 +494,7 @@ describe('Async Patient', () => {
 
     nock(TEST_SERVER_URL)
       .get(`/Condition?asserter=Patient/${TEST_PATIENT_SOURCE_IDS[0]}`)
-      .reply(200, EXAMPLE_NON_EMPTY_SEARCH);
+      .reply(200, EXAMPLE_NON_EMPTY_CONDITION_SEARCH);
     const modelInfo = load(FHIRv401XML);
     const testPatient = new cqlfhir.AsyncPatient(
       patientLuna.entry[0].resource,
@@ -499,6 +506,23 @@ describe('Async Patient', () => {
     const classInfo = modelInfo.findClass('Condition');
     expect(JSON.stringify(records)).equal(
       JSON.stringify([new cqlfhir.FHIRObject(conditionResource, classInfo, modelInfo)])
+    );
+  });
+
+  it('correctly executes a findRecords() for resource that cannot reference patient', async () => {
+    nock(TEST_SERVER_URL).get(`/Location`).reply(200, EXAMPLE_NON_EMPTY_LOCATION_SEARCH);
+
+    const modelInfo = load(FHIRv401XML);
+    const testPatient = new cqlfhir.AsyncPatient(
+      patientLuna.entry[0].resource,
+      modelInfo,
+      TEST_SERVER_INSTANCE
+    );
+
+    const records = await testPatient.findRecords('Location');
+    const classInfo = modelInfo.findClass('Location');
+    expect(JSON.stringify(records)).equal(
+      JSON.stringify([new cqlfhir.FHIRObject(locationResource, classInfo, modelInfo)])
     );
   });
 
