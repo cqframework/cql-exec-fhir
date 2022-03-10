@@ -884,6 +884,14 @@
     "@babel/types" "^7.4.4"
     esutils "^2.0.2"
 
+"@babel/runtime-corejs3@^7.17.2":
+  version "7.17.2"
+  resolved "https://registry.yarnpkg.com/@babel/runtime-corejs3/-/runtime-corejs3-7.17.2.tgz#fdca2cd05fba63388babe85d349b6801b008fd13"
+  integrity sha512-NcKtr2epxfIrNM4VOmPKO46TvDMCBhgi2CrSHaEarrz+Plk2K5r9QemmOFTGpZaoKnWoGH5MO+CzeRsih/Fcgg==
+  dependencies:
+    core-js-pure "^3.20.2"
+    regenerator-runtime "^0.13.4"
+
 "@babel/runtime@^7.17.2", "@babel/runtime@^7.8.4":
   version "7.17.2"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.17.2.tgz#66f68591605e59da47523c631416b18508779941"
@@ -1267,6 +1275,11 @@ core-js-compat@^3.20.2, core-js-compat@^3.21.0:
     browserslist "^4.19.1"
     semver "7.0.0"
 
+core-js-pure@^3.20.2:
+  version "3.21.1"
+  resolved "https://registry.yarnpkg.com/core-js-pure/-/core-js-pure-3.21.1.tgz#8c4d1e78839f5f46208de7230cebfb72bc3bdb51"
+  integrity sha512-12VZfFIu+wyVbBebyHmRTuEE/tZrB4tJToWcwAMcsp3h4+sHR+fMJWbKpYiCRWlhFBq+KNyO8rIV9rTkeVmznQ==
+
 core-util-is@~1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.3.tgz#a6042d3634c2b27e9328f837b965fac83808db85"
@@ -1385,6 +1398,11 @@ escape-string-regexp@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
   integrity sha1-G2HAViGQqN/2rjuyzwIAyhMLhtQ=
+
+eslint-config-prettier@^8.5.0:
+  version "8.5.0"
+  resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-8.5.0.tgz#5a81680ec934beca02c7b1a61cf8ca34b66feab1"
+  integrity sha512-obmWKLUNCnhtQRKc+tmnYuQl0pFU1ibYJQ5BGhTVB08bHe9wC8qUeG7c08dj9XX+AuPj1YSGSQIHl1pnDHZR0Q==
 
 eslint-scope@^7.1.0:
   version "7.1.0"

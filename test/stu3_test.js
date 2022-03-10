@@ -358,7 +358,7 @@ describe('#STU3', () => {
   it('should support id on list of primitives', () => {
     const pt = patientSource.currentPatient();
     expect(compact(pt.get('address')[0].get('line'))).to.deep.equal([
-      { value: "172 O'Keefe Station" },
+      { value: '172 O\'Keefe Station' },
       { id: '2468', value: 'Floor 5' },
       { value: 'Apt. C' }
     ]);
