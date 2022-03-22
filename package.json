@@ -11,7 +11,7 @@
   "main": "./lib/index.js",
   "scripts": {
     "build": "babel src -d lib --copy-files",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "test": "./node_modules/.bin/mocha --reporter spec --recursive",
     "test:watch": "npm test -- --watch",
     "test:debug": "./node_modules/.bin/mocha --inspect --debug-brk --reporter spec --recursive",
