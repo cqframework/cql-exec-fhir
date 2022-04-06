@@ -388,6 +388,23 @@ class Patient extends FHIRObject {
     let classInfo;
     if (retrievedDetails) {
       classInfo = this._modelInfo.findClass(retrievedDetails.dataType);
+      
+      if (classInfo == null) {
+        // fallback search by meta.profile
+        return this._bundle.entry
+          .filter(e => {
+            return (
+              e.resource &&
+              e.resource.meta &&
+              e.resource.meta.profile &&
+              e.resource.meta.profile.includes(profile)
+            );
+          })
+          .map(e => {
+            classInfo = this._modelInfo.findClass(e.resource.resourceType);
+            return new FHIRObject(e.resource, classInfo, this._modelInfo);
+          });
+      }
       const resourceType = classInfo.name.replace(/^FHIR\./, '');
       const records = this._bundle.entry
         .filter(e => {
@@ -400,8 +417,20 @@ class Patient extends FHIRObject {
     } else {
       classInfo = this._modelInfo.findClass(profile);
       if (classInfo == null) {
-        console.error(`Failed to find type info for ${profile}`);
-        return [];
+        // fallback search by meta.profile
+        return this._bundle.entry
+          .filter(e => {
+            return (
+              e.resource &&
+              e.resource.meta &&
+              e.resource.meta.profile &&
+              e.resource.meta.profile.includes(profile)
+            );
+          })
+          .map(e => {
+            classInfo = this._modelInfo.findClass(e.resource.resourceType);
+            return new FHIRObject(e.resource, classInfo, this._modelInfo);
+          });
       }
       const resourceType = classInfo.name.replace(/^FHIR\./, '');
       const records = this._bundle.entry

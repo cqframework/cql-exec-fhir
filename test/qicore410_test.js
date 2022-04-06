@@ -1,6 +1,6 @@
 const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
-const {expect} = require('chai');
+const { expect } = require('chai');
 
 const patientNumer = require('./fixtures/qicore4/tests-numer-EXM124-bundle.json');
 const patientDenom = require('./fixtures/qicore4/tests-denom-EXM124-bundle.json');
@@ -12,14 +12,10 @@ describe('#R4 v4.0.1 with QICore 4.1.0 Data', () => {
   });
 
   beforeEach(() => {
-    patientSource.loadBundles([
-      patientNumer,
-      patientDenom
-    ]);
+    patientSource.loadBundles([patientNumer, patientDenom]);
   });
 
   afterEach(() => patientSource.reset());
-
 
   it('should properly iterate test patients', () => {
     // Check first patient
@@ -46,32 +42,36 @@ describe('#R4 v4.0.1 with QICore 4.1.0 Data', () => {
     expect(patientSource.currentPatient()).to.not.equal(patientSource.currentPatient());
   });
 
-  it('should find patient birthDate', () =>{
+  it('should find patient birthDate', () => {
     const pt = patientSource.currentPatient();
     // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use the .getDate() workaround
-    expect(compact(pt.get('birthDate'))).to.deep.equal({ value: new cql.DateTime.parse('1995-01-01').getDate() });
+    expect(compact(pt.get('birthDate'))).to.deep.equal({
+      value: new cql.DateTime.parse('1995-01-01').getDate()
+    });
     expect(pt.get('birthDate.value')).to.deep.equal(new cql.DateTime.parse('1995-01-01').getDate());
   });
 
-  it('should find patient extensions', () =>{
+  it('should find patient extensions', () => {
     const pt = patientSource.currentPatient();
     const extensions = pt.get('extension');
     expect(extensions).to.have.length(2);
     //Check the first and last ones
     expect(compact(extensions[0])).to.deep.equal({
       url: { value: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race' },
-      extension: [ {
-        url: { value: 'ombCategory' },
-        value: {
-          system: { value: 'urn:oid:2.16.840.1.113883.6.238' },
-          code: { value: '2028-9' },
-          display: { value: 'Asian' }
+      extension: [
+        {
+          url: { value: 'ombCategory' },
+          value: {
+            system: { value: 'urn:oid:2.16.840.1.113883.6.238' },
+            code: { value: '2028-9' },
+            display: { value: 'Asian' }
+          }
         }
-      } ]
+      ]
     });
   });
 
-  it('should find records by type name (e.g., Encounter)', () =>{
+  it('should find records by type name (e.g., Encounter)', () => {
     const pt = patientSource.currentPatient();
     const encounters = pt.findRecords('Encounter');
     expect(encounters).to.have.length(1);
@@ -80,7 +80,7 @@ describe('#R4 v4.0.1 with QICore 4.1.0 Data', () => {
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it('should find records by model name and type name (e.g., FHIR.Encounter)', () =>{
+  it('should find records by model name and type name (e.g., FHIR.Encounter)', () => {
     const pt = patientSource.currentPatient();
     const encounters = pt.findRecords('FHIR.Encounter');
     expect(encounters).to.have.length(1);
@@ -89,7 +89,7 @@ describe('#R4 v4.0.1 with QICore 4.1.0 Data', () => {
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it('should find records by model URL and type name (e.g., {http://hl7.org/fhir}Encounter)', () =>{
+  it('should find records by model URL and type name (e.g., {http://hl7.org/fhir}Encounter)', () => {
     const pt = patientSource.currentPatient();
     const encounters = pt.findRecords('{http://hl7.org/fhir}Encounter');
     expect(encounters).to.have.length(1);
@@ -98,16 +98,20 @@ describe('#R4 v4.0.1 with QICore 4.1.0 Data', () => {
     expect(paymentReconciliations).to.be.empty;
   });
 
-  it('should find records by QICore profile URL (e.g., http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-encounter)', () =>{
+  it('should find records by QICore profile URL (e.g., http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-encounter)', () => {
     const pt = patientSource.currentPatient();
-    const encounters = pt.findRecords('http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-encounter');
+    const encounters = pt.findRecords(
+      'http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-encounter'
+    );
     expect(encounters).to.have.length(1);
     expect(encounters.every(c => c.getTypeInfo().name === 'Encounter')).to.be.true;
-    const coverage = pt.findRecords('http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-coverage');
+    const coverage = pt.findRecords(
+      'http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-coverage'
+    );
     expect(coverage).to.be.empty;
   });
 
-  it('should find a single record', () =>{
+  it('should find a single record', () => {
     const pt = patientSource.currentPatient();
     const encounter = pt.findRecord('Encounter');
     expect(encounter.getTypeInfo().name).to.equal('Encounter');
@@ -129,7 +133,6 @@ function compact(obj) {
     if (value !== undefined) {
       compacted[prop] = compact(value);
     }
-
   }
   return compacted;
 }
