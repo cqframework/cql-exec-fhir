@@ -49,7 +49,10 @@ class ModelInfo {
     this._classesByName = new Map();
 
     for (const t of xml.typeInfo) {
-      if (t.$ != null && (stripNS(t.$.type) === 'ClassInfo' || stripNS(t.$.type) === 'ProfileInfo')) {
+      if (
+        t.$ != null &&
+        (stripNS(t.$.type) === 'ClassInfo' || stripNS(t.$.type) === 'ProfileInfo')
+      ) {
         const classInfo = new ClassInfo(t, this);
         if (classInfo.label != null) {
           this._classesByLabel.set(classInfo.label, classInfo);
@@ -64,16 +67,36 @@ class ModelInfo {
     }
   }
 
-  get name() { return this._name; }
-  get version() { return this._version; }
-  get url() { return this._url; }
-  get schemaLocation() { return this._schemaLocation; }
-  get targetQualifier() { return this._targetQualifier; }
-  get patientClassName() { return this._patientClassName; }
-  get patientClassIdentifier() { return this._patientClassIdentifier; }
-  get patientBirthDatePropertyName() { return this._patientBirthDatePropertyName; }
-  get caseSensitive() { return this._caseSensitive; }
-  get strictRetrieveTyping() { return this._strictRetrieveTyping; }
+  get name() {
+    return this._name;
+  }
+  get version() {
+    return this._version;
+  }
+  get url() {
+    return this._url;
+  }
+  get schemaLocation() {
+    return this._schemaLocation;
+  }
+  get targetQualifier() {
+    return this._targetQualifier;
+  }
+  get patientClassName() {
+    return this._patientClassName;
+  }
+  get patientClassIdentifier() {
+    return this._patientClassIdentifier;
+  }
+  get patientBirthDatePropertyName() {
+    return this._patientBirthDatePropertyName;
+  }
+  get caseSensitive() {
+    return this._caseSensitive;
+  }
+  get strictRetrieveTyping() {
+    return this._strictRetrieveTyping;
+  }
 
   findClass(klass) {
     // First check label, then identifier, then name
@@ -93,7 +116,9 @@ class ModelInfo {
 
     // Last ditch effort by name: if it starts with the model prefix (e.g., FHIR.Patient) then remove it; OR if it
     // doesn't start with the model prefix (e.g. Patient), add it.
-    const modKlassName = klassName.startsWith(`${this.name}.`) ? klassName.slice(this.name.length+1) : `${this.name}.${klassName}`;
+    const modKlassName = klassName.startsWith(`${this.name}.`)
+      ? klassName.slice(this.name.length + 1)
+      : `${this.name}.${klassName}`;
     return this._classesByName.get(modKlassName);
   }
 }
@@ -118,15 +143,33 @@ class ClassInfo {
     this._parentClasses = null; //lazy loaded
   }
 
-  get namespace() { return this._namespace; }
-  get name() { return this._name; }
-  get identifier() { return this._identifier; }
-  get label() { return this._label; }
-  get isRetrievable() { return this._isRetrievable; }
-  get primaryCodePath() { return this._primaryCodePath; }
-  get baseTypeSpecifier() { return this._baseTypeSpecifier; }
-  get modelInfo() { return this._modelInfo; }
-  get elements() { return Array.from(this._elementsByName.values()); }
+  get namespace() {
+    return this._namespace;
+  }
+  get name() {
+    return this._name;
+  }
+  get identifier() {
+    return this._identifier;
+  }
+  get label() {
+    return this._label;
+  }
+  get isRetrievable() {
+    return this._isRetrievable;
+  }
+  get primaryCodePath() {
+    return this._primaryCodePath;
+  }
+  get baseTypeSpecifier() {
+    return this._baseTypeSpecifier;
+  }
+  get modelInfo() {
+    return this._modelInfo;
+  }
+  get elements() {
+    return Array.from(this._elementsByName.values());
+  }
 
   // @return NamedTypeSpecifier
   parentClasses() {
@@ -154,20 +197,27 @@ class ClassInfo {
   findElement(el, allowExplicitChoice = false) {
     let element = this._elementsByName.get(el);
     // TODO: Should we add support for when the base type is a System type?
-    if (element == null && this.baseTypeSpecifier != null && this.baseTypeSpecifier.namespace !== 'System') {
+    if (
+      element == null &&
+      this.baseTypeSpecifier != null &&
+      this.baseTypeSpecifier.namespace !== 'System'
+    ) {
       element = this._modelInfo.findClass(this.baseTypeSpecifier.fqn).findElement(el);
     }
     if (element == null && allowExplicitChoice) {
       // Now go through the name checking possible combinations of name and type for explicit choices
       // E.g., medicationCodeableConcept -> medication / CodeableConcept -> medicationCodeable / Concept
-      for (let i=0; i < el.length; i++) {
+      for (let i = 0; i < el.length; i++) {
         if (/^[A-Z]$/.test(el[i])) {
           const name = el.slice(0, i);
           const potential = this.findElement(name, false);
           if (potential != null && potential.typeSpecifier && potential.typeSpecifier.isChoice) {
             const explicitType = el.slice(i);
             const typeMatchesChoice = potential.typeSpecifier.choices.find(c => {
-              return c.name === explicitType || c.name === `${explicitType[0].toLowerCase()}${explicitType.slice(1)}`;
+              return (
+                c.name === explicitType ||
+                c.name === `${explicitType[0].toLowerCase()}${explicitType.slice(1)}`
+              );
             });
             if (typeMatchesChoice) {
               element = potential;
@@ -190,9 +240,15 @@ class ClassElement {
     this._modelInfo = modelInfo;
   }
 
-  get name() { return this._name; }
-  get typeSpecifier() { return this._typeSpecifier; }
-  get isProhibited() { return this._isProhibited; }
+  get name() {
+    return this._name;
+  }
+  get typeSpecifier() {
+    return this._typeSpecifier;
+  }
+  get isProhibited() {
+    return this._isProhibited;
+  }
 }
 
 const NAMED_TYPE_NAME = 'NamedTypeSpecifier';
@@ -203,10 +259,18 @@ class NamedTypeSpecifier {
     this._namespace = namespace;
   }
 
-  get isNamed() { return true; }
-  get name() { return this._name; }
-  get namespace() { return this._namespace; }
-  get fqn() { return this.namespace == null ? this.name : `${this.namespace}.${this.name}`; }
+  get isNamed() {
+    return true;
+  }
+  get name() {
+    return this._name;
+  }
+  get namespace() {
+    return this._namespace;
+  }
+  get fqn() {
+    return this.namespace == null ? this.name : `${this.namespace}.${this.name}`;
+  }
 }
 
 const LIST_TYPE_NAME = 'ListTypeSpecifier';
@@ -216,8 +280,12 @@ class ListTypeSpecifier {
     this._elementType = elementType;
   }
 
-  get isList() { return true; }
-  get elementType() { return this._elementType; }
+  get isList() {
+    return true;
+  }
+  get elementType() {
+    return this._elementType;
+  }
 }
 
 const INTERVAL_TYPE_NAME = 'IntervalTypeSpecifier';
@@ -227,8 +295,12 @@ class IntervalTypeSpecifier {
     this._pointType = pointType;
   }
 
-  get isInterval() { return true; }
-  get pointType() { return this._pointType; }
+  get isInterval() {
+    return true;
+  }
+  get pointType() {
+    return this._pointType;
+  }
 }
 
 const CHOICE_TYPE_NAME = 'ChoiceTypeSpecifier';
@@ -238,8 +310,12 @@ class ChoiceTypeSpecifier {
     this._choices = choices;
   }
 
-  get isChoice() { return true; }
-  get choices() { return this._choices; }
+  get isChoice() {
+    return true;
+  }
+  get choices() {
+    return this._choices;
+  }
 }
 
 function getTypeSpecifierFromXML(xml, ...prefixes) {
@@ -247,13 +323,13 @@ function getTypeSpecifierFromXML(xml, ...prefixes) {
 
   // loop through prefixes looking for type property (e.g., type, elementType, pointType, etc.)
   if (xml.$) {
-    for (let i=0; type == null && i < prefixes.length; i++) {
+    for (let i = 0; type == null && i < prefixes.length; i++) {
       type = prefixes[i] === '' ? stripNS(xml.$.type) : stripNS(xml.$[`${prefixes[i]}Type`]);
     }
   }
 
   // loop through prefixes looking for typeSpecifier property (e.g., typeSpecifier, elementTypeSpecifier, etc.)
-  for (let i=0; typeSpecifier == null && i < prefixes.length; i++) {
+  for (let i = 0; typeSpecifier == null && i < prefixes.length; i++) {
     typeSpecifier = prefixes[i] === '' ? xml.typeSpecifier : xml[`${prefixes[i]}TypeSpecifier`];
   }
   if (typeSpecifier && typeSpecifier.length > 0) {

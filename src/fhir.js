@@ -41,9 +41,11 @@ class FHIRWrapper {
   }
 
   _typeCastIsAllowed(currentClass, targetClass) {
-    return (targetClass == currentClass) ||
-      (currentClass.parentClasses().includes(targetClass)) || // upcasting, safe
-      (targetClass.parentClasses().includes(currentClass)); // downcasting, unsafe but allowed
+    return (
+      targetClass == currentClass ||
+      currentClass.parentClasses().includes(targetClass) || // upcasting, safe
+      targetClass.parentClasses().includes(currentClass) // downcasting, unsafe but allowed
+    );
   }
 }
 
@@ -108,7 +110,7 @@ class FHIRObject {
     Object.defineProperties(this, {
       _json: { value: json, enumerable: false },
       _typeInfo: { value: typeInfo, enumerable: false },
-      _modelInfo: { value: modelInfo, enumerable: false },
+      _modelInfo: { value: modelInfo, enumerable: false }
     });
     if (typeInfo == null) {
       console.error(`Failed to locate typeInfo for ${json}`);
@@ -127,7 +129,7 @@ class FHIRObject {
 
     for (const name of elementNames) {
       Object.defineProperty(this, name, {
-        get: function() {
+        get: function () {
           return this.get(name);
         },
         enumerable: true
@@ -151,7 +153,7 @@ class FHIRObject {
       return;
     }
 
-    const choicePropertyName = function(element, choice) {
+    const choicePropertyName = function (element, choice) {
       return `${element.name}${choice.name[0].toUpperCase()}${choice.name.slice(1)}`;
     };
 
@@ -161,7 +163,9 @@ class FHIRObject {
       // property is a choice (e.g., medication). In this case we need to find the matchin choice
       // and use it. We don't want other choices, even if they're in the data.
       property = root; // keep the explicit name
-      typeSpecifier = element.typeSpecifier.choices.find(c => property === choicePropertyName(element, c));
+      typeSpecifier = element.typeSpecifier.choices.find(
+        c => property === choicePropertyName(element, c)
+      );
     } else {
       property = element.name;
       typeSpecifier = element.typeSpecifier;
@@ -184,7 +188,9 @@ class FHIRObject {
     if (typeSpecifier.namespace === 'System') {
       // TODO: If there is a suffix, we need to drill into the CQL system type!
       if (suffix != null) {
-        console.error(`Traversing into CQL system types isn't supported: ${this._typeInfo.name}.${root}.${suffix}.`);
+        console.error(
+          `Traversing into CQL system types isn't supported: ${this._typeInfo.name}.${root}.${suffix}.`
+        );
         return;
       }
       return toSystemObject(this._json[property], typeSpecifier.name);
@@ -234,7 +240,12 @@ class FHIRObject {
   // Required by cql-execution API (but not currently used in FHIR data model)
   getDateOrInterval(field) {
     let dateOrIvl = this.get(field);
-    if (!(dateOrIvl instanceof cql.DateTime) && !(dateOrIvl instanceof cql.Interval) && dateOrIvl && dateOrIvl.value) {
+    if (
+      !(dateOrIvl instanceof cql.DateTime) &&
+      !(dateOrIvl instanceof cql.Interval) &&
+      dateOrIvl &&
+      dateOrIvl.value
+    ) {
       dateOrIvl = dateOrIvl.value;
     }
     return dateOrIvl;
@@ -242,7 +253,7 @@ class FHIRObject {
 
   _is(typeSpecifier) {
     return this._typeHierarchy().some(
-      (t) => t.type === typeSpecifier.type && t.name == typeSpecifier.name
+      t => t.type === typeSpecifier.type && t.name == typeSpecifier.name
     );
   }
 
@@ -269,16 +280,20 @@ class FHIRObject {
     }
     // TODO: This currently doesn't include System types in the hierarchy.  We should fix this in the parentClasses
     // function, but until then, we know that everything eventually inherits from System.Any, so force that here:
-    typeHierarchy.push({name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' });
+    typeHierarchy.push({ name: '{urn:hl7-org:elm-types:r1}Any', type: 'NamedTypeSpecifier' });
     return typeHierarchy;
   }
 
-  getTypeInfo() { return this._typeInfo; }
+  getTypeInfo() {
+    return this._typeInfo;
+  }
 }
 
 class Patient extends FHIRObject {
   constructor(bundle, modelInfo) {
-    const patientClass = modelInfo.patientClassIdentifier ? modelInfo.patientClassIdentifier : modelInfo.patientClassName;
+    const patientClass = modelInfo.patientClassIdentifier
+      ? modelInfo.patientClassIdentifier
+      : modelInfo.patientClassName;
     const resourceType = modelInfo.patientClassName.replace(/^FHIR\./, '');
     const ptEntry = bundle.entry.find(e => e.resource && e.resource.resourceType == resourceType);
     const ptClass = modelInfo.findClass(patientClass);
@@ -301,11 +316,13 @@ class Patient extends FHIRObject {
       return [];
     }
     const resourceType = classInfo.name.replace(/^FHIR\./, '');
-    const records = this._bundle.entry.filter( e => {
-      return e.resource && e.resource.resourceType == resourceType;
-    }).map( e => {
-      return new FHIRObject(e.resource, classInfo, this._modelInfo);
-    });
+    const records = this._bundle.entry
+      .filter(e => {
+        return e.resource && e.resource.resourceType == resourceType;
+      })
+      .map(e => {
+        return new FHIRObject(e.resource, classInfo, this._modelInfo);
+      });
     return records;
   }
 }
@@ -330,8 +347,8 @@ function getPropertyFromJSON(json, property, typeSpecifier, modelInfo) {
   // Special handling for FHIR ids and extensions on primitives.
   if (isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo)) {
     // Normalize (or copy) to arrays to better share code between lists and non-lists
-    const valueArr = (typeSpecifier.isList && Array.isArray(value)) ? [...value] : [value];
-    const extraArr = (typeSpecifier.isList && Array.isArray(extra)) ? [...extra] : [extra];
+    const valueArr = typeSpecifier.isList && Array.isArray(value) ? [...value] : [value];
+    const extraArr = typeSpecifier.isList && Array.isArray(extra) ? [...extra] : [extra];
     // Make sure arrays are of same length for easier processing
     while (valueArr.length > extraArr.length) {
       extraArr.push(undefined);
@@ -341,7 +358,7 @@ function getPropertyFromJSON(json, property, typeSpecifier, modelInfo) {
     }
 
     const data = [];
-    for (let i=0; i < valueArr.length; i++) {
+    for (let i = 0; i < valueArr.length; i++) {
       let item = {};
       if (typeof valueArr[i] !== 'undefined') {
         item.value = valueArr[i];
@@ -364,13 +381,21 @@ function getPropertyFromJSON(json, property, typeSpecifier, modelInfo) {
 function isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo) {
   if (typeSpecifier.isNamed) {
     // If its namespace is FHIR and its name starts w/ a lowercase letter, it's a FHIR primitive
-    if (typeSpecifier.namespace === 'FHIR' && typeSpecifier.name[0].toLowerCase() === typeSpecifier.name[0]) {
+    if (
+      typeSpecifier.namespace === 'FHIR' &&
+      typeSpecifier.name[0].toLowerCase() === typeSpecifier.name[0]
+    ) {
       return true;
     }
     // The FHIR modelinfo represents code elements as a unique class type with a single string 'value'.
     // e.g., Goal's 'status' element has type 'GoalStatus', which just has a string value element.
     const typeInfo = modelInfo.findClass(typeSpecifier.fqn);
-    if (typeInfo && typeInfo.baseTypeSpecifier && typeInfo.baseTypeSpecifier.fqn === 'FHIR.Element' && typeInfo.elements.length === 1) {
+    if (
+      typeInfo &&
+      typeInfo.baseTypeSpecifier &&
+      typeInfo.baseTypeSpecifier.fqn === 'FHIR.Element' &&
+      typeInfo.elements.length === 1
+    ) {
       const property = typeInfo.findElement('value');
       return property && property.typeSpecifier.fqn === 'System.String';
     }
@@ -394,30 +419,30 @@ function toSystemObject(data, name) {
   }
 
   switch (name) {
-  case 'Boolean':
-  case 'Decimal':
-  case 'Integer':
-  case 'String':
-    return data;
-  case 'Code':
-  case 'Concept':
-  case 'Quantity':
-    // Currently, these aren't used as leaf nodes in the FHIR model infos!
-    return;
-  case 'DateTime':
-    // CQL DateTime doesn't support 'Z' right now, so account for that.
-    return cql.DateTime.parse(data.replace('Z', '+00:00'));
-  case 'Date':
-    // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use this workaround
-    return cql.DateTime.parse(data) != null ? cql.DateTime.parse(data).getDate() : undefined;
-  case 'Time': {
-    // CQL DateTime doesn't support 'Z' right now, so account for that. In addition Time should not
-    // have an offset, so clear the offset as well.
-    // NOTE: Current CQL execution treats time as a DateTime w/ date fixed to 0000-01-01.
-    const time = cql.DateTime.parse(`0000-01-01T${data.replace('Z', '+00:00')}`);
-    time.timezoneOffset = null;
-    return time;
-  }
+    case 'Boolean':
+    case 'Decimal':
+    case 'Integer':
+    case 'String':
+      return data;
+    case 'Code':
+    case 'Concept':
+    case 'Quantity':
+      // Currently, these aren't used as leaf nodes in the FHIR model infos!
+      return;
+    case 'DateTime':
+      // CQL DateTime doesn't support 'Z' right now, so account for that.
+      return cql.DateTime.parse(data.replace('Z', '+00:00'));
+    case 'Date':
+      // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use this workaround
+      return cql.DateTime.parse(data) != null ? cql.DateTime.parse(data).getDate() : undefined;
+    case 'Time': {
+      // CQL DateTime doesn't support 'Z' right now, so account for that. In addition Time should not
+      // have an offset, so clear the offset as well.
+      // NOTE: Current CQL execution treats time as a DateTime w/ date fixed to 0000-01-01.
+      const time = cql.DateTime.parse(`0000-01-01T${data.replace('Z', '+00:00')}`);
+      time.timezoneOffset = null;
+      return time;
+    }
   }
 }
 
@@ -453,7 +478,8 @@ function toFHIRObject(data, typeSpecifier, modelInfo, suffix) {
       toFHIRObject(data.low, typeSpecifier.pointType, modelInfo),
       toFHIRObject(data.high, typeSpecifier.pointType, modelInfo),
       data.lowClosed,
-      data.highClosed);
+      data.highClosed
+    );
   }
   return;
 }
@@ -483,7 +509,12 @@ function toCode(f) {
       return codings.length === 1 ? codings[0] : codings;
     }
   } else if (typeName === 'Coding') {
-    return new cql.Code(f.code ? f.code.value : f.code, f.system ? f.system.value : f.system, f.version ? f.version.value : f.version, f.display ? f.display.value : f.display);
+    return new cql.Code(
+      f.code ? f.code.value : f.code,
+      f.system ? f.system.value : f.system,
+      f.version ? f.version.value : f.version,
+      f.display ? f.display.value : f.display
+    );
   } else if (typeName === 'code') {
     return f.value;
   }

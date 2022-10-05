@@ -16,7 +16,9 @@
     "test:watch": "npm test -- --watch",
     "test:debug": "./node_modules/.bin/mocha --inspect --debug-brk --reporter spec --recursive",
     "lint": "./node_modules/.bin/eslint .",
-    "lint:fix": "./node_modules/.bin/eslint . --fix"
+    "lint:fix": "./node_modules/.bin/eslint . --fix",
+    "prettier": "prettier --check \"**/*.js\"",
+    "prettier:fix": "prettier --write \"**/*.js\""
   },
   "dependencies": {
     "xml2js": "~0.4.23"
@@ -28,7 +30,9 @@
     "chai": "^4.3.4",
     "cql-execution": ">=1.3.0",
     "eslint": "^8.3.0",
-    "mocha": "9.2.0"
+    "eslint-config-prettier": "^8.5.0",
+    "mocha": "9.2.0",
+    "prettier": "^2.7.1"
   },
   "peerDependencies": {
     "cql-execution": ">=1.3.0"

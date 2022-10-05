@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Checkout, install, lint, build and test
+    name: Checkout, install, lint, prettier, build and test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -42,6 +42,11 @@ jobs:
 
       - name: Lint the source code
         run: yarn lint
+        env:
+          CI: true
+
+      - name: Check prettier formatting
+        run: yarn prettier
         env:
           CI: true
 
