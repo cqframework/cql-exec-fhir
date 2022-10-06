@@ -50,30 +50,31 @@ class FHIRWrapper {
 }
 
 class PatientSource {
-  constructor(filePathOrXML) {
+  constructor(filePathOrXML, shouldCheckProfile = false) {
     this._index = 0;
     this._bundles = [];
+    this._shouldCheckProfile = shouldCheckProfile;
     this._modelInfo = load(filePathOrXML);
   }
 
   // Convenience factory method for getting a FHIR 1.0.2 (DSTU2) Patient Source
-  static FHIRv102() {
-    return new PatientSource(FHIRv102XML);
+  static FHIRv102(shouldCheckProfile = false) {
+    return new PatientSource(FHIRv102XML, shouldCheckProfile);
   }
 
   // Convenience factory method for getting a FHIR 3.0.0 (STU3) Patient Source
-  static FHIRv300() {
-    return new PatientSource(FHIRv300XML);
+  static FHIRv300(shouldCheckProfile = false) {
+    return new PatientSource(FHIRv300XML, shouldCheckProfile);
   }
 
   // Convenience factory method for getting a FHIR 4.0.0 (R4) Patient Source
-  static FHIRv400() {
-    return new PatientSource(FHIRv400XML);
+  static FHIRv400(shouldCheckProfile = false) {
+    return new PatientSource(FHIRv400XML, shouldCheckProfile);
   }
 
   // Convenience factory method for getting a FHIR 4.0.1 (R4) Patient Source
-  static FHIRv401() {
-    return new PatientSource(FHIRv401XML);
+  static FHIRv401(shouldCheckProfile = false) {
+    return new PatientSource(FHIRv401XML, shouldCheckProfile);
   }
 
   get version() {
@@ -86,7 +87,7 @@ class PatientSource {
 
   currentPatient() {
     if (this._index < this._bundles.length) {
-      return new Patient(this._bundles[this._index], this._modelInfo);
+      return new Patient(this._bundles[this._index], this._modelInfo, this._shouldCheckProfile);
     }
   }
 
@@ -290,7 +291,7 @@ class FHIRObject {
 }
 
 class Patient extends FHIRObject {
-  constructor(bundle, modelInfo) {
+  constructor(bundle, modelInfo, shouldCheckProfile = false) {
     const patientClass = modelInfo.patientClassIdentifier
       ? modelInfo.patientClassIdentifier
       : modelInfo.patientClassName;
@@ -298,6 +299,8 @@ class Patient extends FHIRObject {
     const ptEntry = bundle.entry.find(e => e.resource && e.resource.resourceType == resourceType);
     const ptClass = modelInfo.findClass(patientClass);
     super(ptEntry.resource, ptClass, modelInfo);
+    this._shouldCheckProfile = shouldCheckProfile;
+
     // Define a "private" un-enumerable property to hold the bundle
     Object.defineProperty(this, '_bundle', { value: bundle, enumerable: false });
   }
@@ -318,7 +321,17 @@ class Patient extends FHIRObject {
     const resourceType = classInfo.name.replace(/^FHIR\./, '');
     const records = this._bundle.entry
       .filter(e => {
-        return e.resource && e.resource.resourceType == resourceType;
+        if (e.resource && e.resource.resourceType == resourceType) {
+          if (this._shouldCheckProfile) {
+            return (
+              e.resource.meta &&
+              e.resource.meta.profile &&
+              e.resource.meta.profile.includes(profile)
+            );
+          }
+          return true;
+        }
+        return false;
       })
       .map(e => {
         return new FHIRObject(e.resource, classInfo, this._modelInfo);

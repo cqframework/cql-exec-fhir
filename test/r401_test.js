@@ -375,6 +375,36 @@ describe('#R4 v4.0.1', () => {
   });
 });
 
+describe('PatientSource meta.profile checking', () => {
+  let patientSource;
+  before(() => {
+    patientSource = cqlfhir.PatientSource.FHIRv401(true);
+  });
+
+  beforeEach(() => {
+    // patientLuna has 1 Condition resource with a meta.profile set
+    patientSource.loadBundles([patientLuna]);
+  });
+
+  afterEach(() => patientSource.reset());
+
+  it('should not find any resources without a matching meta.profile', () => {
+    const pt = patientSource.currentPatient();
+    const records = pt.findRecords('http://example.com/not-a-real-profile');
+    expect(records).to.have.length(0);
+  });
+
+  it('should find records with matching meta.profile', () => {
+    const pt = patientSource.currentPatient();
+    const conditions = pt.findRecords('http://hl7.org/fhir/StructureDefinition/Condition');
+    expect(conditions).to.have.length(1);
+    expect(conditions.every(c => c.getTypeInfo().name === 'Condition')).to.be.true;
+    expect(conditions[0].meta.profile[0].value).equal(
+      'http://hl7.org/fhir/StructureDefinition/Condition'
+    );
+  });
+});
+
 function compact(obj) {
   if (Array.isArray(obj)) {
     return obj.map(o => compact(o));
