@@ -396,7 +396,9 @@ describe('PatientSource meta.profile checking', () => {
 
   it('should find records with matching meta.profile', () => {
     const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords('http://hl7.org/fhir/StructureDefinition/Condition');
+    const conditions = pt.findRecords(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'
+    );
     expect(conditions).to.have.length(1);
     expect(conditions.every(c => c.getTypeInfo().name === 'Condition')).to.be.true;
     expect(conditions[0].meta.profile[0].value).equal(

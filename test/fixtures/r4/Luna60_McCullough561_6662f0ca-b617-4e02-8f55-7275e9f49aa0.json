@@ -1688,7 +1688,7 @@
         "resourceType": "Condition",
         "id": "9934bc4f-58af-4ecf-bb70-b7cc31987fc5",
         "meta": {
-          "profile": ["http://hl7.org/fhir/StructureDefinition/Condition"]
+          "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis"]
         },
         "clinicalStatus": {
           "coding": [

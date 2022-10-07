@@ -322,7 +322,10 @@ class Patient extends FHIRObject {
     const records = this._bundle.entry
       .filter(e => {
         if (e.resource && e.resource.resourceType == resourceType) {
-          if (this._shouldCheckProfile) {
+          if (
+            this._shouldCheckProfile &&
+            profile !== `http://hl7.org/fhir/StructureDefinition/${resourceType}`
+          ) {
             return (
               e.resource.meta &&
               e.resource.meta.profile &&
