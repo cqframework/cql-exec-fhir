@@ -305,15 +305,28 @@ class Patient extends FHIRObject {
     Object.defineProperty(this, '_bundle', { value: bundle, enumerable: false });
   }
 
-  findRecord(profile) {
-    const records = this.findRecords(profile);
+  findRecord(profile, retrieveDetails) {
+    const records = this.findRecords(profile, retrieveDetails);
     if (records.length > 0) {
       return records[0];
     }
   }
 
-  findRecords(profile) {
-    const classInfo = this._modelInfo.findClass(profile);
+  findRecords(profile, retrieveDetails) {
+    // retrieveDetails was introduced in cql-execution v2.4.1. If it is missing from the function call
+    // profile checking will not work,
+    if (this._shouldCheckProfile && retrieveDetails == null) {
+      throw new Error(
+        'meta.profile checking is only supported using cql-execution >=2.4.1. Please upgrade or disable usage of meta.profile checking'
+      );
+    }
+
+    // Preferring the datatype on retrieveDetails allows the engine to properly identify resources where
+    // the ELM uses a profile from a specific IG (e.g. US Core)
+    const classInfo = this._modelInfo.findClass(
+      retrieveDetails ? retrieveDetails.datatype : profile
+    );
+
     if (classInfo == null) {
       console.error(`Failed to find type info for ${profile}`);
       return [];
