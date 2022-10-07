@@ -32,6 +32,8 @@ const results = executor.exec(patientSource);
 
 ## (Optional) Trusted Environment with meta.profile
 
+**NOTE**: This feature will only work with `cql-execution` version 2.4.1 or higher.
+
 If desired, the FHIR Data Source can be configured to use the `meta.profile` list on FHIR resources as a source of truth for whether or not that resource should be included when looking through the Bundle of data.
 
 ```js
@@ -41,8 +43,8 @@ const cqlfhir = require('cql-exec-fhir');
 const patientSource = cqlfhir.PatientSource.FHIRv401(true); // or .FHIRv102() or .FHIRv300() or .FHIRv400()
 ```
 
-As an example, if an ELM Retrieve expression asks for a FHIR Resource with profile `http://hl7.org/fhir/StructureDefinition/Condition`, the default behavior of the FHIR Data Source is to find any FHIR Condition resource.
-With the trusted environment enabled however, the FHIR Data Source will _only_ find resources with the string `'http://hl7.org/fhir/StructureDefinition/Condition'` included in its `meta.profile` list.
+As an example, if an ELM Retrieve expression asks for a FHIR Condition Resource with profile `http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis`, the default behavior of the FHIR Data Source is to find any FHIR Condition resource.
+With the trusted environment enabled however, the FHIR Data Source will _only_ find resources with the string `'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'` included in its `meta.profile` list.
 
 # Using the FHIRWrapper
 
