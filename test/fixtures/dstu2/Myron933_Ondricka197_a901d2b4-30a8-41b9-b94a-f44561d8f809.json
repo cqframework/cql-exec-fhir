@@ -257,6 +257,9 @@
       "resource": {
         "resourceType": "Condition",
         "id": "3c57b73b-6f28-45e7-9729-b681a1ec4156",
+        "meta": {
+          "profile": ["http://fhir.org/guides/argonaut/StructureDefinition/argo-condition"]
+        },
         "patient": {
           "reference": "urn:uuid:bb5e0a4a-bcb8-448b-ab0a-69f639b7dd88"
         },
@@ -268,7 +271,7 @@
           "coding": [
             {
               "system": "http://snomed.info/sct",
-              "code": "15777000",
+              "code": "714628002",
               "display": "Prediabetes"
             }
           ],

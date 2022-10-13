@@ -379,6 +379,54 @@ describe('#DSTU2', () => {
   });
 });
 
+describe('#DSTU2 PatientSource meta.profile checking', () => {
+  let patientSource;
+  before(() => {
+    patientSource = cqlfhir.PatientSource.FHIRv102({
+      requireProfileTagging: true
+    });
+  });
+
+  beforeEach(() => {
+    // patientMyron has 1 Condition resource with a meta.profile set to be a Argonaut Condition
+    patientSource.loadBundles([patientMyron]);
+  });
+
+  afterEach(() => patientSource.reset());
+
+  it('should throw error when trying to use meta.profile with no retrieveDetails', () => {
+    const pt = patientSource.currentPatient();
+    expect(() =>
+      pt.findRecords('http://fhir.org/guides/argonaut/StructureDefinition/argo-condition')
+    ).to.throw();
+  });
+
+  it('should not find any resources without a matching meta.profile', () => {
+    const pt = patientSource.currentPatient();
+    const conditions = pt.findRecords('http://example.com/not-a-real-profile', {
+      datatype: '{http://hl7.org/fhir}Condition'
+    });
+    expect(conditions).to.have.length(0);
+  });
+
+  it('should find resources with matching meta.profile', () => {
+    const pt = patientSource.currentPatient();
+    const conditions = pt.findRecords(
+      'http://fhir.org/guides/argonaut/StructureDefinition/argo-condition',
+      {
+        datatype: '{http://hl7.org/fhir}Condition',
+        templateId: 'http://fhir.org/guides/argonaut/StructureDefinition/argo-condition'
+      }
+    );
+
+    expect(conditions).to.have.length(1);
+    expect(conditions.every(c => c.getTypeInfo().name === 'FHIR.Condition')).to.be.true;
+    expect(conditions[0].meta.profile[0].value).equal(
+      'http://fhir.org/guides/argonaut/StructureDefinition/argo-condition'
+    );
+  });
+});
+
 function compact(obj) {
   if (Array.isArray(obj)) {
     return obj.map(o => compact(o));

@@ -397,6 +397,54 @@ describe('#STU3', () => {
   });
 });
 
+describe('#STU3 PatientSource meta.profile checking', () => {
+  let patientSource;
+  before(() => {
+    patientSource = cqlfhir.PatientSource.FHIRv300({
+      requireProfileTagging: true
+    });
+  });
+
+  beforeEach(() => {
+    // patientMyron has 1 Encounter resource with a meta.profile set to be a US Core Encounter
+    patientSource.loadBundles([patientMyron]);
+  });
+
+  afterEach(() => patientSource.reset());
+
+  it('should throw error when trying to use meta.profile with no retrieveDetails', () => {
+    const pt = patientSource.currentPatient();
+    expect(() =>
+      pt.findRecords('http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter')
+    ).to.throw();
+  });
+
+  it('should not find any resources without a matching meta.profile', () => {
+    const pt = patientSource.currentPatient();
+    const encounters = pt.findRecords('http://example.com/not-a-real-profile', {
+      datatype: '{http://hl7.org/fhir}Encounter'
+    });
+    expect(encounters).to.have.length(0);
+  });
+
+  it('should find resources with matching meta.profile', () => {
+    const pt = patientSource.currentPatient();
+    const encounters = pt.findRecords(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter',
+      {
+        datatype: '{http://hl7.org/fhir}Encounter',
+        templateId: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter'
+      }
+    );
+
+    expect(encounters).to.have.length(1);
+    expect(encounters.every(c => c.getTypeInfo().name === 'Encounter')).to.be.true;
+    expect(encounters[0].meta.profile[1].value).equal(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter'
+    );
+  });
+});
+
 function compact(obj) {
   if (Array.isArray(obj)) {
     return obj.map(o => compact(o));
