@@ -434,6 +434,15 @@ describe('#R4 v4.0.1 PatientSource meta.profile checking', () => {
       });
     }).to.throw();
   });
+
+  it('should find FHIR core resources even when they are not tagged with the core URL', () => {
+    const luna = patientSource.currentPatient();
+    const conditions = luna.findRecords('http://hl7.org/fhir/StructureDefinition/Condition', {
+      datatype: '{http://hl7.org/fhir}Condition',
+      templateId: 'http://hl7.org/fhir/StructureDefinition/Condition'
+    });
+    expect(conditions).to.have.length(8);
+  });
 });
 
 function compact(obj) {

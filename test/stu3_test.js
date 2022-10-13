@@ -454,6 +454,15 @@ describe('#STU3 PatientSource meta.profile checking', () => {
       });
     }).to.throw();
   });
+
+  it('should find FHIR core resources even when they are not tagged with the core URL', () => {
+    const myron = patientSource.currentPatient();
+    const conditions = myron.findRecords('http://hl7.org/fhir/StructureDefinition/Condition', {
+      datatype: '{http://hl7.org/fhir}Condition',
+      templateId: 'http://hl7.org/fhir/StructureDefinition/Condition'
+    });
+    expect(conditions).to.have.length(9);
+  });
 });
 
 function compact(obj) {

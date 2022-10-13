@@ -423,31 +423,32 @@ describe('#R4 PatientSource meta.profile checking', () => {
 
   beforeEach(() => {
     // patientLuna has 1 Condition resource with a meta.profile set to be a US Core Condition
-    patientSource.loadBundles([patientLuna]);
+    // patientJohnnie does not have meta.profile set on any resources
+    patientSource.loadBundles([patientLuna, patientJohnnie]);
   });
 
   afterEach(() => patientSource.reset());
 
   it('should throw error when trying to use meta.profile with no retrieveDetails', () => {
-    const pt = patientSource.currentPatient();
+    const luna = patientSource.currentPatient();
     expect(() =>
-      pt.findRecords(
+      luna.findRecords(
         'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'
       )
     ).to.throw();
   });
 
   it('should not find any resources without a matching meta.profile', () => {
-    const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords('http://example.com/not-a-real-profile', {
+    const luna = patientSource.currentPatient();
+    const conditions = luna.findRecords('http://example.com/not-a-real-profile', {
       datatype: '{http://hl7.org/fhir}Condition'
     });
     expect(conditions).to.have.length(0);
   });
 
   it('should find resources with matching meta.profile', () => {
-    const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords(
+    const luna = patientSource.currentPatient();
+    const conditions = luna.findRecords(
       'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis',
       {
         datatype: '{http://hl7.org/fhir}Condition',
@@ -460,6 +461,25 @@ describe('#R4 PatientSource meta.profile checking', () => {
     expect(conditions[0].meta.profile[0].value).equal(
       'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'
     );
+  });
+
+  it('should throw error if no patient resource is found with "requireProfileTagging" enabled', () => {
+    const johnnie = patientSource.nextPatient();
+    expect(() => {
+      johnnie.findRecords('http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient', {
+        datatype: '{http://hl7.org/fhir}Patient',
+        templateId: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+      });
+    }).to.throw();
+  });
+
+  it('should find FHIR core resources even when they are not tagged with the core URL', () => {
+    const luna = patientSource.currentPatient();
+    const conditions = luna.findRecords('http://hl7.org/fhir/StructureDefinition/Condition', {
+      datatype: '{http://hl7.org/fhir}Condition',
+      templateId: 'http://hl7.org/fhir/StructureDefinition/Condition'
+    });
+    expect(conditions).to.have.length(8);
   });
 });
 
