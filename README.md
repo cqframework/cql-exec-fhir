@@ -44,7 +44,7 @@ const patientSource = cqlfhir.PatientSource.FHIRv401(true); // or .FHIRv102() or
 ```
 
 As an example, if an ELM Retrieve expression asks for a FHIR Condition Resource with profile `http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis`, the default behavior of the FHIR Data Source is to find any FHIR Condition resource.
-With the trusted environment enabled however, the FHIR Data Source will _only_ find resources with the string `'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'` included in its `meta.profile` list.
+With the trusted environment enabled however, the FHIR Data Source will _only_ find resources with the string `'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'` included in their `meta.profile` lists.
 
 # Using the FHIRWrapper
 
