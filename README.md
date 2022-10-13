@@ -39,8 +39,10 @@ If desired, the FHIR Data Source can be configured to use the `meta.profile` lis
 ```js
 const cqlfhir = require('cql-exec-fhir');
 
-// Passing 'true' to the constructor enables the trusted environment
-const patientSource = cqlfhir.PatientSource.FHIRv401(true); // or .FHIRv102() or .FHIRv300() or .FHIRv400()
+// Including "requireProfileTagging: true" in an object passed in to the constructor enables the trusted environment
+const patientSource = cqlfhir.PatientSource.FHIRv401({
+  requireProfileTagging: true,
+}); // or .FHIRv102() or .FHIRv300() or .FHIRv400()
 ```
 
 As an example, if an ELM Retrieve expression asks for a FHIR Condition Resource with profile `http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis`, the default behavior of the FHIR Data Source is to find any FHIR Condition resource.
