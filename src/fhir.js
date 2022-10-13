@@ -50,31 +50,31 @@ class FHIRWrapper {
 }
 
 class PatientSource {
-  constructor(filePathOrXML, shouldCheckProfile = false) {
+  constructor(filePathOrXML, patientSourceOptions = {}) {
     this._index = 0;
     this._bundles = [];
-    this._shouldCheckProfile = shouldCheckProfile;
+    this._patientSourceOptions = patientSourceOptions;
     this._modelInfo = load(filePathOrXML);
   }
 
   // Convenience factory method for getting a FHIR 1.0.2 (DSTU2) Patient Source
-  static FHIRv102(shouldCheckProfile = false) {
-    return new PatientSource(FHIRv102XML, shouldCheckProfile);
+  static FHIRv102(patientSourceOptions) {
+    return new PatientSource(FHIRv102XML, patientSourceOptions);
   }
 
   // Convenience factory method for getting a FHIR 3.0.0 (STU3) Patient Source
-  static FHIRv300(shouldCheckProfile = false) {
-    return new PatientSource(FHIRv300XML, shouldCheckProfile);
+  static FHIRv300(patientSourceOptions) {
+    return new PatientSource(FHIRv300XML, patientSourceOptions);
   }
 
   // Convenience factory method for getting a FHIR 4.0.0 (R4) Patient Source
-  static FHIRv400(shouldCheckProfile = false) {
-    return new PatientSource(FHIRv400XML, shouldCheckProfile);
+  static FHIRv400(patientSourceOptions) {
+    return new PatientSource(FHIRv400XML, patientSourceOptions);
   }
 
   // Convenience factory method for getting a FHIR 4.0.1 (R4) Patient Source
-  static FHIRv401(shouldCheckProfile = false) {
-    return new PatientSource(FHIRv401XML, shouldCheckProfile);
+  static FHIRv401(patientSourceOptions) {
+    return new PatientSource(FHIRv401XML, patientSourceOptions);
   }
 
   get version() {
@@ -87,7 +87,7 @@ class PatientSource {
 
   currentPatient() {
     if (this._index < this._bundles.length) {
-      return new Patient(this._bundles[this._index], this._modelInfo, this._shouldCheckProfile);
+      return new Patient(this._bundles[this._index], this._modelInfo, this._patientSourceOptions);
     }
   }
 
@@ -291,7 +291,7 @@ class FHIRObject {
 }
 
 class Patient extends FHIRObject {
-  constructor(bundle, modelInfo, shouldCheckProfile = false) {
+  constructor(bundle, modelInfo, patientSourceOptions = {}) {
     const patientClass = modelInfo.patientClassIdentifier
       ? modelInfo.patientClassIdentifier
       : modelInfo.patientClassName;
@@ -299,7 +299,7 @@ class Patient extends FHIRObject {
     const ptEntry = bundle.entry.find(e => e.resource && e.resource.resourceType == resourceType);
     const ptClass = modelInfo.findClass(patientClass);
     super(ptEntry.resource, ptClass, modelInfo);
-    this._shouldCheckProfile = shouldCheckProfile;
+    this._patientSourceOptions = patientSourceOptions;
 
     // Define a "private" un-enumerable property to hold the bundle
     Object.defineProperty(this, '_bundle', { value: bundle, enumerable: false });
@@ -313,11 +313,13 @@ class Patient extends FHIRObject {
   }
 
   findRecords(profile, retrieveDetails) {
+    const { requireProfileTagging } = this._patientSourceOptions;
+
     // retrieveDetails was introduced in cql-execution v2.4.1. If it is missing from the function call
     // profile checking will not work,
-    if (this._shouldCheckProfile && retrieveDetails == null) {
+    if (requireProfileTagging === true && retrieveDetails == null) {
       throw new Error(
-        'meta.profile checking is only supported using cql-execution >=2.4.1. Please upgrade or disable usage of meta.profile checking'
+        'meta.profile checking is only supported using cql-execution >=2.4.1. Please upgrade or set the "requireProfileTagging" option to false when constructing a PatientSource'
       );
     }
 
@@ -336,7 +338,7 @@ class Patient extends FHIRObject {
       .filter(e => {
         if (e.resource && e.resource.resourceType == resourceType) {
           if (
-            this._shouldCheckProfile &&
+            requireProfileTagging === true &&
             profile !== `http://hl7.org/fhir/StructureDefinition/${resourceType}`
           ) {
             return (
