@@ -389,29 +389,30 @@ describe('#DSTU2 PatientSource meta.profile checking', () => {
 
   beforeEach(() => {
     // patientMyron has 1 Condition resource with a meta.profile set to be a Argonaut Condition
-    patientSource.loadBundles([patientMyron]);
+    // patientShawnee does not have an Argonaut profile included in meta.profile on any resources
+    patientSource.loadBundles([patientMyron, patientShawnee]);
   });
 
   afterEach(() => patientSource.reset());
 
   it('should throw error when trying to use meta.profile with no retrieveDetails', () => {
-    const pt = patientSource.currentPatient();
+    const myron = patientSource.currentPatient();
     expect(() =>
-      pt.findRecords('http://fhir.org/guides/argonaut/StructureDefinition/argo-condition')
+      myron.findRecords('http://fhir.org/guides/argonaut/StructureDefinition/argo-condition')
     ).to.throw();
   });
 
   it('should not find any resources without a matching meta.profile', () => {
-    const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords('http://example.com/not-a-real-profile', {
+    const myron = patientSource.currentPatient();
+    const conditions = myron.findRecords('http://example.com/not-a-real-profile', {
       datatype: '{http://hl7.org/fhir}Condition'
     });
     expect(conditions).to.have.length(0);
   });
 
   it('should find resources with matching meta.profile', () => {
-    const pt = patientSource.currentPatient();
-    const conditions = pt.findRecords(
+    const myron = patientSource.currentPatient();
+    const conditions = myron.findRecords(
       'http://fhir.org/guides/argonaut/StructureDefinition/argo-condition',
       {
         datatype: '{http://hl7.org/fhir}Condition',
@@ -424,6 +425,16 @@ describe('#DSTU2 PatientSource meta.profile checking', () => {
     expect(conditions[0].meta.profile[0].value).equal(
       'http://fhir.org/guides/argonaut/StructureDefinition/argo-condition'
     );
+  });
+
+  it('should throw error if no patient resource is found with "requireProfileTagging" enabled', () => {
+    const shawnee = patientSource.nextPatient();
+    expect(() => {
+      shawnee.findRecords('http://fhir.org/guides/argonaut/StructureDefinition/argo-patient', {
+        datatype: '{http://hl7.org/fhir}Patient',
+        templateId: 'http://fhir.org/guides/argonaut/StructureDefinition/argo-patient'
+      });
+    }).to.throw();
   });
 });
 

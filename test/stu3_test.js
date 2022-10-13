@@ -407,29 +407,30 @@ describe('#STU3 PatientSource meta.profile checking', () => {
 
   beforeEach(() => {
     // patientMyron has 1 Encounter resource with a meta.profile set to be a US Core Encounter
-    patientSource.loadBundles([patientMyron]);
+    // patientShawnee does not have a US Core profile included in meta.profile on any resources
+    patientSource.loadBundles([patientMyron, patientShawnee]);
   });
 
   afterEach(() => patientSource.reset());
 
   it('should throw error when trying to use meta.profile with no retrieveDetails', () => {
-    const pt = patientSource.currentPatient();
+    const myron = patientSource.currentPatient();
     expect(() =>
-      pt.findRecords('http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter')
+      myron.findRecords('http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter')
     ).to.throw();
   });
 
   it('should not find any resources without a matching meta.profile', () => {
-    const pt = patientSource.currentPatient();
-    const encounters = pt.findRecords('http://example.com/not-a-real-profile', {
+    const myron = patientSource.currentPatient();
+    const encounters = myron.findRecords('http://example.com/not-a-real-profile', {
       datatype: '{http://hl7.org/fhir}Encounter'
     });
     expect(encounters).to.have.length(0);
   });
 
   it('should find resources with matching meta.profile', () => {
-    const pt = patientSource.currentPatient();
-    const encounters = pt.findRecords(
+    const myron = patientSource.currentPatient();
+    const encounters = myron.findRecords(
       'http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter',
       {
         datatype: '{http://hl7.org/fhir}Encounter',
@@ -442,6 +443,16 @@ describe('#STU3 PatientSource meta.profile checking', () => {
     expect(encounters[0].meta.profile[1].value).equal(
       'http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter'
     );
+  });
+
+  it('should throw error if no patient resource is found with "requireProfileTagging" enabled', () => {
+    const shawnee = patientSource.nextPatient();
+    expect(() => {
+      shawnee.findRecords('http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient', {
+        datatype: '{http://hl7.org/fhir}Patient',
+        templateId: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+      });
+    }).to.throw();
   });
 });
 

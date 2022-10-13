@@ -319,7 +319,7 @@ class Patient extends FHIRObject {
     // profile checking will not work,
     if (requireProfileTagging === true && retrieveDetails == null) {
       throw new Error(
-        'meta.profile checking is only supported using cql-execution >=2.4.1. Please upgrade or set the "requireProfileTagging" option to false when constructing a PatientSource'
+        'meta.profile checking is only supported using cql-execution >=2.4.1. Please upgrade or set the "requireProfileTagging" option to false when constructing a PatientSource.'
       );
     }
 
@@ -354,6 +354,17 @@ class Patient extends FHIRObject {
       .map(e => {
         return new FHIRObject(e.resource, classInfo, this._modelInfo);
       });
+
+    // PatientSources have the assumption that bundles loaded in always have a Patient resources.
+    // When "requireProfileTagging" is true, we could encounter a case where the Patient resource is contained in the Bundle
+    // but does not have meta.profile set to match the Retrieve of the Patient.
+    // In this case, we should throw an error, as we want to ensure that the Patient can properly be retrieved before executing the rest of the ELM Retrieves
+    if (requireProfileTagging === true && resourceType === 'Patient' && records.length === 0) {
+      throw new Error(
+        `Patient record with meta.profile matching ${profile} was not found. Please ensure that meta.profile is properly set on the Patient resource, or set the "requireProfileTagging" option to false when constructing a PatientSource.`
+      );
+    }
+
     return records;
   }
 }
