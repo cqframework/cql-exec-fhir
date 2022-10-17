@@ -50,30 +50,31 @@ class FHIRWrapper {
 }
 
 class PatientSource {
-  constructor(filePathOrXML) {
+  constructor(filePathOrXML, patientSourceOptions = {}) {
     this._index = 0;
     this._bundles = [];
+    this._patientSourceOptions = patientSourceOptions;
     this._modelInfo = load(filePathOrXML);
   }
 
   // Convenience factory method for getting a FHIR 1.0.2 (DSTU2) Patient Source
-  static FHIRv102() {
-    return new PatientSource(FHIRv102XML);
+  static FHIRv102(patientSourceOptions) {
+    return new PatientSource(FHIRv102XML, patientSourceOptions);
   }
 
   // Convenience factory method for getting a FHIR 3.0.0 (STU3) Patient Source
-  static FHIRv300() {
-    return new PatientSource(FHIRv300XML);
+  static FHIRv300(patientSourceOptions) {
+    return new PatientSource(FHIRv300XML, patientSourceOptions);
   }
 
   // Convenience factory method for getting a FHIR 4.0.0 (R4) Patient Source
-  static FHIRv400() {
-    return new PatientSource(FHIRv400XML);
+  static FHIRv400(patientSourceOptions) {
+    return new PatientSource(FHIRv400XML, patientSourceOptions);
   }
 
   // Convenience factory method for getting a FHIR 4.0.1 (R4) Patient Source
-  static FHIRv401() {
-    return new PatientSource(FHIRv401XML);
+  static FHIRv401(patientSourceOptions) {
+    return new PatientSource(FHIRv401XML, patientSourceOptions);
   }
 
   get version() {
@@ -86,7 +87,7 @@ class PatientSource {
 
   currentPatient() {
     if (this._index < this._bundles.length) {
-      return new Patient(this._bundles[this._index], this._modelInfo);
+      return new Patient(this._bundles[this._index], this._modelInfo, this._patientSourceOptions);
     }
   }
 
@@ -290,7 +291,7 @@ class FHIRObject {
 }
 
 class Patient extends FHIRObject {
-  constructor(bundle, modelInfo) {
+  constructor(bundle, modelInfo, patientSourceOptions = {}) {
     const patientClass = modelInfo.patientClassIdentifier
       ? modelInfo.patientClassIdentifier
       : modelInfo.patientClassName;
@@ -298,19 +299,36 @@ class Patient extends FHIRObject {
     const ptEntry = bundle.entry.find(e => e.resource && e.resource.resourceType == resourceType);
     const ptClass = modelInfo.findClass(patientClass);
     super(ptEntry.resource, ptClass, modelInfo);
+    this._patientSourceOptions = patientSourceOptions;
+
     // Define a "private" un-enumerable property to hold the bundle
     Object.defineProperty(this, '_bundle', { value: bundle, enumerable: false });
   }
 
-  findRecord(profile) {
-    const records = this.findRecords(profile);
+  findRecord(profile, retrieveDetails) {
+    const records = this.findRecords(profile, retrieveDetails);
     if (records.length > 0) {
       return records[0];
     }
   }
 
-  findRecords(profile) {
-    const classInfo = this._modelInfo.findClass(profile);
+  findRecords(profile, retrieveDetails) {
+    const { requireProfileTagging } = this._patientSourceOptions;
+
+    // retrieveDetails was introduced in cql-execution v2.4.1. If it is missing from the function call
+    // profile checking will not work,
+    if (requireProfileTagging === true && retrieveDetails == null) {
+      throw new Error(
+        'meta.profile checking is only supported using cql-execution >=2.4.1. Please upgrade or set the "requireProfileTagging" option to false when constructing a PatientSource.'
+      );
+    }
+
+    // Preferring the datatype on retrieveDetails allows the engine to properly identify resources where
+    // the ELM uses a profile from a specific IG (e.g. US Core)
+    const classInfo = this._modelInfo.findClass(
+      retrieveDetails ? retrieveDetails.datatype : profile
+    );
+
     if (classInfo == null) {
       console.error(`Failed to find type info for ${profile}`);
       return [];
@@ -318,11 +336,35 @@ class Patient extends FHIRObject {
     const resourceType = classInfo.name.replace(/^FHIR\./, '');
     const records = this._bundle.entry
       .filter(e => {
-        return e.resource && e.resource.resourceType == resourceType;
+        if (e.resource && e.resource.resourceType == resourceType) {
+          if (
+            requireProfileTagging === true &&
+            profile !== `http://hl7.org/fhir/StructureDefinition/${resourceType}`
+          ) {
+            return (
+              e.resource.meta &&
+              e.resource.meta.profile &&
+              e.resource.meta.profile.includes(profile)
+            );
+          }
+          return true;
+        }
+        return false;
       })
       .map(e => {
         return new FHIRObject(e.resource, classInfo, this._modelInfo);
       });
+
+    // PatientSources have the assumption that bundles loaded in always have a Patient resources.
+    // When "requireProfileTagging" is true, we could encounter a case where the Patient resource is contained in the Bundle
+    // but does not have meta.profile set to match the Retrieve of the Patient.
+    // In this case, we should throw an error, as we want to ensure that the Patient can properly be retrieved before executing the rest of the ELM Retrieves
+    if (requireProfileTagging === true && resourceType === 'Patient' && records.length === 0) {
+      throw new Error(
+        `Patient record with meta.profile matching ${profile} was not found. Please ensure that meta.profile is properly set on the Patient resource, or set the "requireProfileTagging" option to false when constructing a PatientSource.`
+      );
+    }
+
     return records;
   }
 }

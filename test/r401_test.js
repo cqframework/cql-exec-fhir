@@ -375,6 +375,76 @@ describe('#R4 v4.0.1', () => {
   });
 });
 
+describe('#R4 v4.0.1 PatientSource meta.profile checking', () => {
+  let patientSource;
+  before(() => {
+    patientSource = cqlfhir.PatientSource.FHIRv401({
+      requireProfileTagging: true
+    });
+  });
+
+  beforeEach(() => {
+    // patientLuna has 1 Condition resource with a meta.profile set to be a US Core Condition
+    // patientJohnnie does not have meta.profile set on any resources
+    patientSource.loadBundles([patientLuna, patientJohnnie]);
+  });
+
+  afterEach(() => patientSource.reset());
+
+  it('should throw error when trying to use meta.profile with no retrieveDetails', () => {
+    const luna = patientSource.currentPatient();
+    expect(() =>
+      luna.findRecords(
+        'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'
+      )
+    ).to.throw();
+  });
+
+  it('should not find any resources without a matching meta.profile', () => {
+    const luna = patientSource.currentPatient();
+    const conditions = luna.findRecords('http://example.com/not-a-real-profile', {
+      datatype: '{http://hl7.org/fhir}Condition'
+    });
+    expect(conditions).to.have.length(0);
+  });
+
+  it('should find resources with matching meta.profile', () => {
+    const luna = patientSource.currentPatient();
+    const conditions = luna.findRecords(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis',
+      {
+        datatype: '{http://hl7.org/fhir}Condition',
+        templateId:
+          'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'
+      }
+    );
+    expect(conditions).to.have.length(1);
+    expect(conditions.every(c => c.getTypeInfo().name === 'Condition')).to.be.true;
+    expect(conditions[0].meta.profile[0].value).equal(
+      'http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis'
+    );
+  });
+
+  it('should throw error if no patient resource is found with "requireProfileTagging" enabled', () => {
+    const johnnie = patientSource.nextPatient();
+    expect(() => {
+      johnnie.findRecords('http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient', {
+        datatype: '{http://hl7.org/fhir}Patient',
+        templateId: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient'
+      });
+    }).to.throw();
+  });
+
+  it('should find FHIR core resources even when they are not tagged with the core URL', () => {
+    const luna = patientSource.currentPatient();
+    const conditions = luna.findRecords('http://hl7.org/fhir/StructureDefinition/Condition', {
+      datatype: '{http://hl7.org/fhir}Condition',
+      templateId: 'http://hl7.org/fhir/StructureDefinition/Condition'
+    });
+    expect(conditions).to.have.length(8);
+  });
+});
+
 function compact(obj) {
   if (Array.isArray(obj)) {
     return obj.map(o => compact(o));
