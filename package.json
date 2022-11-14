@@ -35,6 +35,6 @@
     "prettier": "^2.7.1"
   },
   "peerDependencies": {
-    "cql-execution": ">=1.3.0 | ^3.0.0-beta"
+    "cql-execution": ">=1.3.0 || ^3.0.0-beta"
   }
 }
