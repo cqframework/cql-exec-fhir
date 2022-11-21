@@ -9,8 +9,9 @@
     "url": "git@github.com:cqframework/cql-exec-fhir.git"
   },
   "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "scripts": {
-    "build": "babel src -d lib --copy-files",
+    "build": "babel src index.d.ts -d lib --copy-files",
     "prepublish": "npm run build",
     "test": "./node_modules/.bin/mocha --reporter spec --recursive",
     "test:watch": "npm test -- --watch",
