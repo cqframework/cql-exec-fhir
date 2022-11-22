@@ -1,35 +1,33 @@
+type RecordObject = import('cql-execution').RecordObject;
+type PatientObject = import('cql-execution').PatientObject;
+type DataProvider = import('cql-execution').DataProvider;
+type RetrieveDetails = import('cql-execution').RetrieveDetails;
+type Code = import('cql-execution').Code;
+type Date = import('cql-execution').Date;
+type Interval = import('cql-execution').Interval;
+
+class FHIRObject implements RecordObject {
+  constructor(json: any, typeInfo: any, modelInfo: any);
+  get(field: string): any;
+  getId(): string;
+  getCode(field: string): Code;
+  getDate(field: string): Date;
+  getInterval(field: string): Interval;
+  getDateOrInterval(field: string): Date | Interval;
+  _is(typeSpecifier: any): boolean;
+  _typeHierarchy(): any;
+  getTypeInfo(): any;
+}
+
+class Patient extends FHIRObject implements PatientObject {
+  constructor(bundle: any, modelInfo: any, patientSourceOptions: PatientSourceOptions);
+  findRecords(profile: string, retrieveDetails?: RetrieveDetails): FHIRObject;
+  findRecord(profile: string, retrieveDetails?: RetrieveDetails): FHIRObject;
+}
+
 declare module 'cql-exec-fhir' {
-  import {
-    RecordObject,
-    PatientObject,
-    DataProvider,
-    RetrieveDetails,
-    Code,
-    Date,
-    Interval
-  } from 'cql-execution';
-
-  interface PatientSourceOptions {
-    requireProfileTagging: boolean;
-  }
-
-  class FHIRObject implements RecordObject {
-    constructor(json: any, typeInfo: any, modelInfo: any);
-    get(field: string): any;
-    getId(): string;
-    getCode(field: string): Code;
-    getDate(field: string): Date;
-    getInterval(field: string): Interval;
-    getDateOrInterval(field: string): Date | Interval;
-    _is(typeSpecifier: any): boolean;
-    _typeHierarchy(): any;
-    getTypeInfo(): any;
-  }
-
-  class Patient extends FHIRObject implements PatientObject {
-    constructor(bundle: any, modelInfo: any, patientSourceOptions: PatientSourceOptions);
-    findRecords(profile: string, retrieveDetails?: RetrieveDetails): FHIRObject;
-    findRecord(profile: string, retrieveDetails?: RetrieveDetails): FHIRObject;
+  export interface PatientSourceOptions {
+    requireProfileTagging?: boolean;
   }
 
   export class PatientSource implements DataProvider {
