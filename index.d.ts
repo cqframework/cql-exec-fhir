@@ -3,7 +3,7 @@ type PatientObject = import('cql-execution').PatientObject;
 type DataProvider = import('cql-execution').DataProvider;
 type RetrieveDetails = import('cql-execution').RetrieveDetails;
 type Code = import('cql-execution').Code;
-type Date = import('cql-execution').Date;
+type DateTime = import('cql-execution').DateTime;
 type Interval = import('cql-execution').Interval;
 
 class FHIRObject implements RecordObject {
@@ -11,17 +11,17 @@ class FHIRObject implements RecordObject {
   get(field: string): any;
   getId(): string;
   getCode(field: string): Code;
-  getDate(field: string): Date;
+  getDate(field: string): DateTime;
   getInterval(field: string): Interval;
-  getDateOrInterval(field: string): Date | Interval;
+  getDateOrInterval(field: string): DateTime | Interval;
   _is(typeSpecifier: any): boolean;
-  _typeHierarchy(): any;
+  _typeHierarchy(): any[];
   getTypeInfo(): any;
 }
 
 class Patient extends FHIRObject implements PatientObject {
   constructor(bundle: any, modelInfo: any, patientSourceOptions: PatientSourceOptions);
-  findRecords(profile: string, retrieveDetails?: RetrieveDetails): FHIRObject;
+  findRecords(profile: string, retrieveDetails?: RetrieveDetails): FHIRObject[];
   findRecord(profile: string, retrieveDetails?: RetrieveDetails): FHIRObject;
 }
 
@@ -33,7 +33,7 @@ declare module 'cql-exec-fhir' {
   export class PatientSource implements DataProvider {
     constructor(filePathOrXML: string, patientSourceOptions?: PatientSourceOptions);
     static FHIRv102(patientSourceOptions?: PatientSourceOptions): PatientSource;
-    static FHIRv401(patientSourceOptions?: PatientSourceOptions): PatientSource;
+    static FHIRv300(patientSourceOptions?: PatientSourceOptions): PatientSource;
     static FHIRv400(patientSourceOptions?: PatientSourceOptions): PatientSource;
     static FHIRv401(patientSourceOptions?: PatientSourceOptions): PatientSource;
     get version(): string;
