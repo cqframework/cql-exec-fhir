@@ -113,9 +113,9 @@ describe('#R4 v4.0.1', () => {
     const pt = patientSource.currentPatient();
     // cql-execution v1.3.2 currently doesn't export the new Date class, so we need to use the .getDate() workaround
     expect(compact(pt.get('birthDate'))).to.deep.equal({
-      value: new cql.DateTime.parse('2008-11-06').getDate()
+      value: cql.DateTime.parse('2008-11-06').getDate()
     });
-    expect(pt.get('birthDate.value')).to.deep.equal(new cql.DateTime.parse('2008-11-06').getDate());
+    expect(pt.get('birthDate.value')).to.deep.equal(cql.DateTime.parse('2008-11-06').getDate());
   });
 
   it('should find patient extensions', () => {
