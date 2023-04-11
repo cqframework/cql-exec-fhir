@@ -1,6 +1,6 @@
 {
   "name": "cql-exec-fhir",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Provides a FHIR-based data source for use w/ CQL",
   "author": "Chris Moesel <cmoesel@mitre.org>",
   "license": "Apache-2.0",
@@ -22,7 +22,7 @@
     "prettier:fix": "prettier --write \"**/*.js\""
   },
   "dependencies": {
-    "xml2js": "~0.4.23"
+    "xml2js": "^0.5.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.3",
