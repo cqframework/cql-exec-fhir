@@ -72,24 +72,24 @@ $ npm test
 
 # Linting the Code
 
-To encourage quality and consistency within the code base, all code should pass eslint without any warnings.  Many text editors can be configured to automatically flag eslint violations.  We also provide an npm script for running eslint on the project.  To run eslint, execute the following command:
+To encourage quality and consistency within the code base, all code should pass eslint without any warnings.  Many text editors can be configured to automatically flag eslint violations.  We also provide an npm script for running eslint on the project.  To check your code against eslint's rules, execute the following command:
 ```
 $ npm run lint
 ```
 
-Many eslint violations can be fixed automatically by executing the following command:
+To automatically fix code that violates eslint's rules:
 ```
 $ npm run lint:fix
 ```
 
-# Checking Code Format
+# Prettier
 
-To encourage a consistent format in the code base, all code should pass prettier without any warnings. To run prettier, execute the following command:
+To encourage quality and consistency within the code base, all code should also be formatted using [Prettier](https://prettier.io/).  Many text editors can be configured to automatically reformat code using Prettier on save.  We also provide an npm script for running prettier on the project.  To check your code against Prettier's rules, execute the following command:
 ```
 $ npm run prettier
 ```
 
-Prettier violations can be fixed automatically by executing the following command:
+To automatically fix any code that violates Prettier's rules:
 ```
 $ npm run prettier:fix
 ```
