@@ -8,8 +8,7 @@ FHIR 1.0.2 (DSTU2), FHIR 3.0.0 (STU3), FHIR 4.0.0 ,and FHIR 4.0.1 (R4) are suppo
 To use this project, you should perform the following steps:
 
 1. Install [Node.js](https://nodejs.org/en/download/)
-2. Install [Yarn](https://yarnpkg.com/en/docs/install)
-3. Execute the following from this project's root directory: `yarn`
+2. Execute the following from this project's root directory: `npm install`
 
 # Using the FHIR Patient Data Source
 
@@ -64,9 +63,40 @@ const conditionFhirObject = fhirWrapper.wrap(conditionResource)
 // Now conditionFhirObject can be passed into the cql execution engine
 ```
 
+# Testing the Code
+
+To run the automated unit tests, execute the following command:
+```
+$ npm test
+```
+
 # Linting the Code
 
 To encourage quality and consistency within the code base, all code should pass eslint without any warnings.  Many text editors can be configured to automatically flag eslint violations.  We also provide an npm script for running eslint on the project.  To run eslint, execute the following command:
 ```
-$ yarn lint
+$ npm run lint
+```
+
+Many eslint violations can be fixed automatically by executing the following command:
+```
+$ npm run lint:fix
+```
+
+# Checking Code Format
+
+To encourage a consistent format in the code base, all code should pass prettier without any warnings. To run prettier, execute the following command:
+```
+$ npm run prettier
+```
+
+Prettier violations can be fixed automatically by executing the following command:
+```
+$ npm run prettier:fix
+```
+
+# Altogether Now!
+
+To run the unit tests, linter, and prettier all in one shot, execute the following command:
+```
+$ npm check
 ```
