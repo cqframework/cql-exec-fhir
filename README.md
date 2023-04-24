@@ -98,5 +98,5 @@ $ npm run prettier:fix
 
 To run the unit tests, linter, and prettier all in one shot, execute the following command:
 ```
-$ npm check
+$ npm run test:plus
 ```

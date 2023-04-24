@@ -20,7 +20,7 @@
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --check \"**/*.js\"",
     "prettier:fix": "prettier --write \"**/*.js\"",
-    "check": "npm run test && npm run lint && npm run prettier"
+    "test:plus": "npm run test && npm run lint && npm run prettier"
   },
   "dependencies": {
     "xml2js": "^0.5.0"
