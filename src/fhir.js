@@ -5,6 +5,20 @@ const FHIRv300XML = require('./modelInfos/fhir-modelinfo-3.0.0.xml.js');
 const FHIRv400XML = require('./modelInfos/fhir-modelinfo-4.0.0.xml.js');
 const FHIRv401XML = require('./modelInfos/fhir-modelinfo-4.0.1.xml.js');
 
+const memoize = (fn) => {
+    let cache = new Map();
+    return (...args) => {
+       let cacheKey = JSON.stringify([...args]);
+       if (cache.has(cacheKey)) {
+         return cache.get(cacheKey);
+       } else {
+            let result = fn(...args);
+            cache.set(cacheKey, result);
+            return result;
+        }
+    }
+}
+
 class FHIRWrapper {
   constructor(filePathOrXML) {
     this._modelInfo = load(filePathOrXML);
@@ -496,7 +510,9 @@ function toSystemObject(data, name) {
  * @param {string} suffix - the trailing part of the path to get (e.g., x.y.z)
  * @returns {FHIRObject}
  */
-function toFHIRObject(data, typeSpecifier, modelInfo, suffix) {
+const toFHIRObject = memoize(_toFHIRObject);
+
+function _toFHIRObject(data, typeSpecifier, modelInfo, suffix) {
   if (data == null) {
     // preserve distinction between null or undefined
     return data;
