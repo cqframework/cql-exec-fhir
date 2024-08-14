@@ -8,7 +8,7 @@ const FHIRv401XML = require('./modelInfos/fhir-modelinfo-4.0.1.xml.js');
 const memoize = (fn) => {
     let cache = new Map();
     return (...args) => {
-       let cacheKey = JSON.stringify([args[0],args[3]]);
+       let cacheKey = JSON.stringify([...args]);
        if (cache.has(cacheKey)) {
          return cache.get(cacheKey);
        } else {
