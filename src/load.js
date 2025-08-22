@@ -1,6 +1,7 @@
 const fs = require('fs');
 const xml2js = require('xml2js');
 const processors = require('xml2js/lib/processors');
+const util = require('./util');
 
 function load(filePathOrXML) {
   let xml, name;
@@ -213,10 +214,11 @@ class ClassInfo {
           const potential = this.findElement(name, false);
           if (potential != null && potential.typeSpecifier && potential.typeSpecifier.isChoice) {
             const explicitType = el.slice(i);
-            const typeMatchesChoice = potential.typeSpecifier.choices.find(c => {
+            const typeMatchesChoice = potential.typeSpecifier.choices.find(choice => {
+              const choiceName = util.normalizeChoiceName(choice.name);
               return (
-                c.name === explicitType ||
-                c.name === `${explicitType[0].toLowerCase()}${explicitType.slice(1)}`
+                choiceName === explicitType ||
+                choiceName === `${explicitType[0].toLowerCase()}${explicitType.slice(1)}`
               );
             });
             if (typeMatchesChoice) {
