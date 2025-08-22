@@ -20414,6 +20414,48 @@
         "method": "POST",
         "url": "Observation"
       }
+    },
+    {
+      "fullUrl": "urn:uuid:f1ee0d3c-a27e-498e-8190-b58a72b1309e",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "f1ee0d3c-a27e-498e-8190-b58a72b1309e",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [ {
+            "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+            "code": "2618839",
+            "display": "4 ML dalteparin sodium 2500 UNT/ML Injection"
+          } ],
+          "text": "4 ML dalteparin sodium 2500 UNT/ML Injection"
+        },
+        "subject": {
+          "reference": "urn:uuid:356a0ab8-5592-4ec5-8c3a-9a4d0857b793"
+        },
+        "authoredOn": "2018-04-09T07:50:00.000Z",
+        "dosageInstruction": [ {
+          "timing": {
+            "repeat": {
+              "frequency": 1,
+              "period": 1,
+              "periodUnit": "d"
+            }
+          },
+          "doseAndRate": [ {
+            "doseQuantity": {
+              "value": 10000,
+              "unit": "[IU]/mL",
+              "system": "http://unitsofmeasure.org",
+              "code": "[IU]/mL"
+            }
+          } ]
+        } ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
     }
   ]
 }

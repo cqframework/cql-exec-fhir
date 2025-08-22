@@ -319,6 +319,31 @@ describe('#R4 v4.0.1', () => {
     );
   });
 
+  it('should support getting a Dosage', () => {
+    const pt = patientSource.currentPatient();
+    const medicationRequest = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === 'f1ee0d3c-a27e-498e-8190-b58a72b1309e');
+    const dosages = medicationRequest.get('dosageInstruction');
+    expect(dosages).to.have.length(1);
+    const dosage = dosages[0];
+    expect(dosage._typeInfo.name).to.equal('Dosage');
+    const timingRepeat = dosage.timing.repeat;
+    expect(timingRepeat.frequency.value).to.equal(1);
+    expect(timingRepeat.period.value).to.equal(1);
+    expect(timingRepeat.periodUnit.value).to.equal('d');
+    const doseAndRates = dosage.doseAndRate;
+    expect(doseAndRates).to.have.length(1);
+    const doseAndRateDose = doseAndRates[0].dose;
+    // NOTE: This currently fails because dose is a SimpleQuantity, so cql-exec-fhir is looking
+    // for a property named doseSimpleQuantity instead of doseQuantity
+    expect(doseAndRateDose).to.exist;
+    expect(doseAndRateDose.value.value).to.equal(10000);
+    expect(doseAndRateDose.unit.value).to.equal('[IU]/mL');
+    expect(doseAndRateDose.system.value).to.equal('http://unitsofmeasure.org');
+    expect(doseAndRateDose.code.value).to.equal('[IU]/mL');
+  });
+
   it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
     const encounter = pt
