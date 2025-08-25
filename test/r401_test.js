@@ -319,6 +319,45 @@ describe('#R4 v4.0.1', () => {
     );
   });
 
+  // Since MedicationRequest.dosageInstruction.doseAndRate.dose is a SimpleQuantity, and since
+  // SimpleQuantity is actually a profile of Quantity, cql-exec-fhir needs to looks for a property
+  // named doseQuantity (NOT doseSimpleQuantity).
+  // Bug Report: https://github.com/projecttacoma/fqm-execution/issues/352
+  it('should support getting a SimpleQuantity choice by its root name', () => {
+    const pt = patientSource.currentPatient();
+    const medicationRequest = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === 'f1ee0d3c-a27e-498e-8190-b58a72b1309e');
+    const doseAndRates = medicationRequest.get('dosageInstruction')[0].get('doseAndRate');
+    expect(doseAndRates).to.have.length(1);
+    const doseAndRateDose = doseAndRates[0].get('dose');
+    expect(doseAndRateDose).to.exist;
+    expect(doseAndRateDose.value.value).to.equal(10000);
+    expect(doseAndRateDose.unit.value).to.equal('[IU]/mL');
+    expect(doseAndRateDose.system.value).to.equal('http://unitsofmeasure.org');
+    expect(doseAndRateDose.code.value).to.equal('[IU]/mL');
+  });
+
+  // Normally, when cql-exec-fhir sees an explicit choice like doseQuantity, it looks for a choice
+  // element of type Quantity. In this case, MedicationRequest.dosageInstruction.doseAndRate.dose
+  // actually has a choice with type SimpleQuantity (NOT Quantity), so cql-exec-fhir needs to
+  // recognize that as a match since SimpleQuantity is a profile of Quantity.
+  // Related Bug Report: https://github.com/projecttacoma/fqm-execution/issues/352
+  it('should support getting a SimpleQuantity choice by its explicit name', () => {
+    const pt = patientSource.currentPatient();
+    const medicationRequest = pt
+      .findRecords('MedicationRequest')
+      .find(p => p.getId() === 'f1ee0d3c-a27e-498e-8190-b58a72b1309e');
+    const doseAndRates = medicationRequest.get('dosageInstruction')[0].get('doseAndRate');
+    expect(doseAndRates).to.have.length(1);
+    const doseAndRateDose = doseAndRates[0].get('doseQuantity');
+    expect(doseAndRateDose).to.exist;
+    expect(doseAndRateDose.value.value).to.equal(10000);
+    expect(doseAndRateDose.unit.value).to.equal('[IU]/mL');
+    expect(doseAndRateDose.system.value).to.equal('http://unitsofmeasure.org');
+    expect(doseAndRateDose.code.value).to.equal('[IU]/mL');
+  });
+
   it('should support id and extension on primitives', () => {
     const pt = patientSource.currentPatient();
     const encounter = pt

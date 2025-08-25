@@ -1,5 +1,6 @@
 const cql = require('cql-execution');
 const load = require('./load');
+const util = require('./util');
 const FHIRv102XML = require('./modelInfos/fhir-modelinfo-1.0.2.xml.js');
 const FHIRv300XML = require('./modelInfos/fhir-modelinfo-3.0.0.xml.js');
 const FHIRv400XML = require('./modelInfos/fhir-modelinfo-4.0.0.xml.js');
@@ -155,7 +156,8 @@ class FHIRObject {
     }
 
     const choicePropertyName = function (element, choice) {
-      return `${element.name}${choice.name[0].toUpperCase()}${choice.name.slice(1)}`;
+      const choiceName = util.normalizeChoiceName(choice.name);
+      return `${element.name}${choiceName[0].toUpperCase()}${choiceName.slice(1)}`;
     };
 
     let property, typeSpecifier;
