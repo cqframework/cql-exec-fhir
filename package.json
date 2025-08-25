@@ -1,6 +1,6 @@
 {
   "name": "cql-exec-fhir",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Provides a FHIR-based data source for use w/ CQL",
   "author": "Chris Moesel <cmoesel@mitre.org>",
   "license": "Apache-2.0",
