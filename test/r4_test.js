@@ -140,10 +140,10 @@ describe('#R4 v4.0.0', () => {
         }
       ]
     });
-    expect(compact(extensions[6])).to.deep.equal({
-      url: { value: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years' },
-      value: { value: 10.0 }
-    });
+    expect(extensions[6].url.value).to.equal(
+      'http://synthetichealth.github.io/synthea/quality-adjusted-life-years'
+    );
+    expect(extensions[6].value.value.equals(10.0)).to.be.true;
   });
 
   it('should find records by type name (e.g., Condition)', () => {
@@ -262,7 +262,9 @@ describe('#R4 v4.0.0', () => {
     const claim = pt
       .findRecords('Claim')
       .find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
-    expect(claim.get('total.value.value')).to.equal(687.08);
+    const decimal = claim.get('total.value.value');
+    expect(decimal).to.be.instanceOf(cql.Decimal);
+    expect(decimal.equals(687.08)).to.be.true;
   });
 
   it('should support getting integers', () => {

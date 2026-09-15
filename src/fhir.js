@@ -464,10 +464,11 @@ function toSystemObject(data, name) {
 
   switch (name) {
     case 'Boolean':
-    case 'Decimal':
     case 'Integer':
     case 'String':
       return data;
+    case 'Decimal':
+      return cql.Decimal.from(data);
     case 'Code':
     case 'Concept':
     case 'Quantity':

@@ -136,10 +136,10 @@ describe('#DSTU2', () => {
         text: { value: 'White' }
       }
     });
-    expect(compact(extensions[6])).to.deep.equal({
-      url: { value: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years' },
-      valueDecimal: { value: 40.353136402148294 }
-    });
+    expect(extensions[6].url.value).to.equal(
+      'http://synthetichealth.github.io/synthea/quality-adjusted-life-years'
+    );
+    expect(extensions[6].valueDecimal.value.equals(40.353136402148294)).to.be.true;
   });
 
   it('should find records by type name (e.g., Condition)', () => {
@@ -263,7 +263,9 @@ describe('#DSTU2', () => {
           e.url &&
           e.url.value === 'http://synthetichealth.github.io/synthea/disability-adjusted-life-years'
       );
-    expect(daly.get('valueDecimal.value')).to.deep.equal(1.6468635978517043);
+    const decimal = daly.get('valueDecimal.value');
+    expect(decimal).to.be.instanceOf(cql.Decimal);
+    expect(decimal.equals(1.6468635978517043)).to.be.true;
   });
 
   it('should support getting integers', () => {
