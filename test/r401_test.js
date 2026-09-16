@@ -1,6 +1,7 @@
 const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
 const { expect } = require('chai');
+const { expectDecimal } = require('./testUtils');
 
 const conditionResource = require('./fixtures/r4/Condition_f201.json');
 const patientLuna = require('./fixtures/r4/Luna60_McCullough561_6662f0ca-b617-4e02-8f55-7275e9f49aa0.json');
@@ -143,7 +144,7 @@ describe('#R4 v4.0.1', () => {
     expect(extensions[6].url.value).to.equal(
       'http://synthetichealth.github.io/synthea/quality-adjusted-life-years'
     );
-    expect(extensions[6].value.value.equals(10.0)).to.be.true;
+    expectDecimal(extensions[6].value.value, 10.0);
   });
 
   it('should find records by type name (e.g., Condition)', () => {
@@ -263,8 +264,7 @@ describe('#R4 v4.0.1', () => {
       .findRecords('Claim')
       .find(p => p.getId() === '58cd648a-5f4d-4306-bef4-49ec64c88c63');
     const decimal = claim.get('total.value.value');
-    expect(decimal).to.be.instanceOf(cql.Decimal);
-    expect(decimal.equals(687.08)).to.be.true;
+    expectDecimal(decimal, 687.08);
   });
 
   it('should support getting integers', () => {
@@ -334,7 +334,7 @@ describe('#R4 v4.0.1', () => {
     expect(doseAndRates).to.have.length(1);
     const doseAndRateDose = doseAndRates[0].get('dose');
     expect(doseAndRateDose).to.exist;
-    expect(doseAndRateDose.value.value.equals(10000)).to.be.true;
+    expectDecimal(doseAndRateDose.value.value, 10000);
     expect(doseAndRateDose.unit.value).to.equal('[IU]/mL');
     expect(doseAndRateDose.system.value).to.equal('http://unitsofmeasure.org');
     expect(doseAndRateDose.code.value).to.equal('[IU]/mL');
@@ -354,7 +354,7 @@ describe('#R4 v4.0.1', () => {
     expect(doseAndRates).to.have.length(1);
     const doseAndRateDose = doseAndRates[0].get('doseQuantity');
     expect(doseAndRateDose).to.exist;
-    expect(doseAndRateDose.value.value.equals(10000)).to.be.true;
+    expectDecimal(doseAndRateDose.value.value, 10000);
     expect(doseAndRateDose.unit.value).to.equal('[IU]/mL');
     expect(doseAndRateDose.system.value).to.equal('http://unitsofmeasure.org');
     expect(doseAndRateDose.code.value).to.equal('[IU]/mL');

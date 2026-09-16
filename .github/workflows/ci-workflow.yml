@@ -19,12 +19,13 @@ jobs:
           CI: true
 
   test:
-    name: Test node ${{ matrix.node }} on ${{ matrix.os }}
+    name: Test cql-execution ${{ matrix.cql_execution }} with node ${{ matrix.node }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
         node: [ '14', '16', '18' ]
+        cql_execution: [ '^3.0.0', '^4.0.0-0' ]
 
     steps:
       - uses: actions/checkout@v3
@@ -32,4 +33,5 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm install
+      - run: npm install --no-save --package-lock=false cql-execution@${{ matrix.cql_execution }}
       - run: npm test

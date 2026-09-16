@@ -468,7 +468,12 @@ function toSystemObject(data, name) {
     case 'String':
       return data;
     case 'Decimal':
-      return cql.Decimal.from(data);
+      // Decimal is used by cql-execution starting in v4.0.0.
+      // For compatibility with older versions, fallback to plain number
+      // if Decimal is not available.
+      return cql.Decimal != null && typeof cql.Decimal.from === 'function'
+        ? cql.Decimal.from(data)
+        : data;
     case 'Code':
     case 'Concept':
     case 'Quantity':

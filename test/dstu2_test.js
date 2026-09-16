@@ -1,6 +1,7 @@
 const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
 const { expect } = require('chai');
+const { expectDecimal } = require('./testUtils');
 
 const conditionResource = require('./fixtures/dstu2/Condition_f201.json');
 const patientMyron = require('./fixtures/dstu2/Myron933_Ondricka197_a901d2b4-30a8-41b9-b94a-f44561d8f809.json');
@@ -139,7 +140,7 @@ describe('#DSTU2', () => {
     expect(extensions[6].url.value).to.equal(
       'http://synthetichealth.github.io/synthea/quality-adjusted-life-years'
     );
-    expect(extensions[6].valueDecimal.value.equals(40.353136402148294)).to.be.true;
+    expectDecimal(extensions[6].valueDecimal.value, 40.353136402148294);
   });
 
   it('should find records by type name (e.g., Condition)', () => {
@@ -264,8 +265,7 @@ describe('#DSTU2', () => {
           e.url.value === 'http://synthetichealth.github.io/synthea/disability-adjusted-life-years'
       );
     const decimal = daly.get('valueDecimal.value');
-    expect(decimal).to.be.instanceOf(cql.Decimal);
-    expect(decimal.equals(1.6468635978517043)).to.be.true;
+    expectDecimal(decimal, 1.6468635978517043);
   });
 
   it('should support getting integers', () => {
