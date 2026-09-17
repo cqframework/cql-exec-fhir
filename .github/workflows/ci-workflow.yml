@@ -53,5 +53,5 @@ jobs:
           node-version: 24.x
       - run: npm install
       # note: ^4.0.0-0 matches beta releases (as well as final ones), ^4.0.0 does not
-      - run: npm install --no-save --package-lock=false "cql-execution@^4.0.0-0"
+      - run: npm install "cql-execution@^4.0.0-0"
       - run: npm test
