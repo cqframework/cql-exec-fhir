@@ -3,36 +3,55 @@ name: CI Checks
 on: [push, pull_request]
 
 jobs:
-  lint:
-    name: Check audit, lint, and prettier
+  audit:
+    name: Check npm audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: '18'
-      - run: npm install
-      - run: npm audit
+          node-version: 24.x
+      - run: npm audit --omit=dev
+  lint:
+    name: Check lint and prettier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+      - run: npm ci
       - run: npm run lint
       - run: npm run prettier
         env:
           CI: true
 
   test:
-    name: Test cql-execution ${{ matrix.cql_execution }} with node ${{ matrix.node }} on ${{ matrix.os }}
+    name: Test using node ${{ matrix.node }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false # don't cancel other jobs if one combination fails
       matrix:
         os: [ubuntu-latest, windows-latest]
-        node: [ '14', '16', '18' ]
-        cql_execution: [ '^3.0.0', '^4.0.0-0' ]
+        node: [20.x, 22.x, 24.x]
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
+      - run: npm ci
+      - run: npm test
+
+  test_cql_execution_v4:
+    name: Test with cql-execution v4, using node 24 on ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
       - run: npm install
-      - run: npm install --no-save --package-lock=false cql-execution@${{ matrix.cql_execution }}
+      # note: ^4.0.0-0 matches beta releases (as well as final ones), ^4.0.0 does not
+      - run: npm install --no-save --package-lock=false "cql-execution@^4.0.0-0"
       - run: npm test
