@@ -31,12 +31,12 @@
     "@babel/preset-env": "^7.28.3",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.34.0",
-    "chai": "^4.5.0",
+    "chai": "^6.2.2",
     "cql-execution": "^3.3.0",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.3.0",
-    "mocha": "^11.7.1",
+    "mocha": "^12.0.2",
     "prettier": "^3.6.2"
   },
   "peerDependencies": {
