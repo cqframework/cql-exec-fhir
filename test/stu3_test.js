@@ -1,6 +1,7 @@
 const cql = require('cql-execution');
 const cqlfhir = require('../src/index');
 const { expect } = require('chai');
+const { expectDecimal } = require('./testUtils');
 
 const conditionResource = require('./fixtures/stu3/Condition_f201.json');
 const patientMyron = require('./fixtures/stu3/Myron933_Ondricka197_a901d2b4-30a8-41b9-b94a-f44561d8f809.json');
@@ -140,10 +141,10 @@ describe('#STU3', () => {
         }
       ]
     });
-    expect(compact(extensions[10])).to.deep.equal({
-      url: { value: 'http://synthetichealth.github.io/synthea/quality-adjusted-life-years' },
-      value: { value: 40.353136402148294 }
-    });
+    expect(extensions[10].url.value).to.equal(
+      'http://synthetichealth.github.io/synthea/quality-adjusted-life-years'
+    );
+    expectDecimal(extensions[10].value.value, 40.353136402148294);
   });
 
   it('should find records by type name (e.g., Condition)', () => {
@@ -257,7 +258,8 @@ describe('#STU3', () => {
     const claim = pt
       .findRecords('Claim')
       .find(p => p.getId() === 'c04752c4-38ab-464a-8c97-b4e755d15e36');
-    expect(claim.get('total.value.value')).to.equal(265.52);
+    const decimal = claim.get('total.value.value');
+    expectDecimal(decimal, 265.52);
   });
 
   it('should support getting integers', () => {
