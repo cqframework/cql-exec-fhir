@@ -120,7 +120,7 @@ class FHIRObject {
     }
 
     const elementNames = new Set();
-    for (let currentInfo = typeInfo; currentInfo != null; ) {
+    for (let currentInfo = typeInfo; currentInfo != null;) {
       currentInfo.elements.forEach(e => elementNames.add(e.name));
       if (currentInfo.baseTypeSpecifier != null) {
         currentInfo = modelInfo.findClass(currentInfo.baseTypeSpecifier.fqn);
