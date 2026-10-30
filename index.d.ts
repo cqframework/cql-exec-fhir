@@ -1,6 +1,7 @@
 type RecordObject = import('cql-execution').RecordObject;
 type PatientObject = import('cql-execution').PatientObject;
 type DataProvider = import('cql-execution').DataProvider;
+type DataModelProvider = import('cql-execution').DataModelProvider;
 type RetrieveDetails = import('cql-execution').RetrieveDetails;
 type Code = import('cql-execution').Code;
 type DateTime = import('cql-execution').DateTime;
@@ -41,15 +42,17 @@ declare module 'cql-exec-fhir' {
     currentPatient(): Patient | undefined;
     nextPatient(): Patient | undefined;
     reset(): void;
+    getDataModelProvider(): DataModelProvider;
   }
 
-  export class FHIRWrapper {
+  export class FHIRWrapper implements DataModelProvider {
     constructor(filePathOrXML: string);
     static FHIRv102(): FHIRWrapper;
     static FHIRv300(): FHIRWrapper;
     static FHIRv400(): FHIRWrapper;
     static FHIRv401(): FHIRWrapper;
     wrap(fhirJson: any, fhirResourceType?: string): FHIRObject;
+    createInstance(classType: string, obj: any): FHIRObject | null;
     _typeCastIsAllowed(currentClass: any, targetClass: any): boolean;
   }
 }

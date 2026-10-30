@@ -7,8 +7,8 @@ const FHIRv400XML = require('./modelInfos/fhir-modelinfo-4.0.0.xml.js');
 const FHIRv401XML = require('./modelInfos/fhir-modelinfo-4.0.1.xml.js');
 
 class FHIRWrapper {
-  constructor(filePathOrXML) {
-    this._modelInfo = load(filePathOrXML);
+  constructor(filePathOrXMLOrModelInfo, isAlreadyLoaded = false) {
+    this._modelInfo = isAlreadyLoaded ? filePathOrXMLOrModelInfo : load(filePathOrXMLOrModelInfo);
   }
 
   static FHIRv102() {
@@ -39,6 +39,14 @@ class FHIRWrapper {
     }
 
     return new FHIRObject(fhirJson, targetClass, this._modelInfo);
+  }
+
+  createInstance(classType, obj) {
+    const targetClass = this._modelInfo.findClass(classType);
+    if (!targetClass) {
+      return null;
+    }
+    return new FHIRInstance(obj, targetClass, this._modelInfo);
   }
 
   _typeCastIsAllowed(currentClass, targetClass) {
@@ -103,6 +111,10 @@ class PatientSource {
   reset() {
     this._index = 0;
     this._bundles = [];
+  }
+
+  getDataModelProvider() {
+    return new FHIRWrapper(this._modelInfo, true);
   }
 }
 
@@ -289,6 +301,17 @@ class FHIRObject {
 
   getTypeInfo() {
     return this._typeInfo;
+  }
+}
+
+// Special case of a FHIRObject:
+// constructed by the ELM `Instance` expression, so the backing object is CQL data model, not JSON.
+class FHIRInstance extends FHIRObject {
+  get(field) {
+    return field.split('.').reduce((value, part) => {
+      if (value == null) return value;
+      return typeof value.get === 'function' ? value.get(part) : value[part];
+    }, this._json);
   }
 }
 
