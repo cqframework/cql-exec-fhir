@@ -167,11 +167,6 @@ class FHIRObject {
       return;
     }
 
-    const choicePropertyName = function (element, choice) {
-      const choiceName = util.normalizeChoiceName(choice.name);
-      return `${element.name}${choiceName[0].toUpperCase()}${choiceName.slice(1)}`;
-    };
-
     let property, typeSpecifier;
     if (root !== element.name && element.typeSpecifier.isChoice) {
       // This only happens when the root was explicit (e.g., medicationCodeableConcept) but the
@@ -305,13 +300,55 @@ class FHIRObject {
 }
 
 // Special case of a FHIRObject:
-// constructed by the ELM `Instance` expression, so the backing object is CQL data model, not JSON.
+// constructed by the ELM `Instance` expression, so the backing object is in the execution data model, not JSON.
 class FHIRInstance extends FHIRObject {
   get(field) {
-    return field.split('.').reduce((value, part) => {
-      if (value == null) return value;
-      return typeof value.get === 'function' ? value.get(part) : value[part];
-    }, this._json);
+    const [root, ...rest] = field.split('.');
+    let value = this._json[root];
+
+    // ELM choices may be stored under either their generic or explicit FHIR name (eg, 'value' or 'valueString')
+    if (value === undefined) {
+      const element = this._typeInfo.findElement(root, true);
+      if (element != null && element.typeSpecifier.isChoice) {
+        if (element.name === root) {
+          // Requested the generic name (value), but the instance field name has an explicit type (valueString).
+          // Find whichever choice is present on the instance
+          for (const choice of element.typeSpecifier.choices) {
+            const explicitName = choicePropertyName(element, choice);
+            if (this._json[explicitName] !== undefined) {
+              value = this._json[explicitName];
+              break;
+            }
+          }
+        } else {
+          // Requested an explicit type (valueString), but the instance field has a generic name (value).
+          // Return it only if its actual type matches the requested choice
+          const choice = element.typeSpecifier.choices.find(
+            c => root === choicePropertyName(element, c)
+          );
+          const candidate = this._json[element.name];
+          if (choice != null && candidate != null && typeof candidate._is === 'function') {
+            const namespace =
+              choice.namespace === this._modelInfo.name ? this._modelInfo.url : choice.namespace;
+            if (
+              candidate._is({ type: 'NamedTypeSpecifier', name: `{${namespace}}${choice.name}` })
+            ) {
+              value = candidate;
+            }
+          }
+        }
+      }
+    }
+
+    return rest.reduce((current, part) => {
+      if (current == null) return current;
+      return typeof current.get === 'function' ? current.get(part) : current[part];
+    }, value);
+  }
+
+  getId() {
+    const id = this.get('id');
+    return id != null && typeof id === 'object' && 'value' in id ? id.value : id;
   }
 }
 
@@ -443,6 +480,11 @@ function getPropertyFromJSON(json, property, typeSpecifier, modelInfo) {
   }
 
   return json[property];
+}
+
+function choicePropertyName(element, choice) {
+  const choiceName = util.normalizeChoiceName(choice.name);
+  return `${element.name}${choiceName[0].toUpperCase()}${choiceName.slice(1)}`;
 }
 
 function isFHIRPrimitiveOrListOfFHIRPrimitives(typeSpecifier, modelInfo) {
