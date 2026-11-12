@@ -41,6 +41,7 @@ declare module 'cql-exec-fhir' {
     currentPatient(): Patient | undefined;
     nextPatient(): Patient | undefined;
     reset(): void;
+    getInstanceCreator(): FHIRWrapper;
   }
 
   export class FHIRWrapper {
@@ -50,6 +51,8 @@ declare module 'cql-exec-fhir' {
     static FHIRv400(): FHIRWrapper;
     static FHIRv401(): FHIRWrapper;
     wrap(fhirJson: any, fhirResourceType?: string): FHIRObject;
+    canCreate(classType: string): boolean;
+    createInstance(classType: string, obj: any): FHIRObject | null;
     _typeCastIsAllowed(currentClass: any, targetClass: any): boolean;
   }
 }

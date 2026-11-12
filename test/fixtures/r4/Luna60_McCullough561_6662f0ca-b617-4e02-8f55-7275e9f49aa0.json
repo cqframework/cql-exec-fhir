@@ -20416,6 +20416,35 @@
       }
     },
     {
+      "fullUrl": "urn:uuid:ecfa4dcf-9e4b-5204-ed5b-76dce26473b6",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "ecfa4dcf-9e4b-5204-ed5b-76dce26473b6",
+        "status": "final",
+        "code": {
+          "coding": [ {
+            "system": "http://loinc.org",
+            "code": "51847-2",
+            "display": "Evaluation + Plan note"
+          } ]
+        },
+        "subject": {
+          "reference": "urn:uuid:356a0ab8-5592-4ec5-8c3a-9a4d0857b793"
+        },
+        "encounter": {
+          "reference": "urn:uuid:9d911534-10d8-4dc2-91f1-d7aeed828af8"
+        },
+        "effectiveDateTime": "2009-07-16T12:18:29-04:00",
+        "presentedForm": [ {
+          "data": "SGVsbG8="
+        } ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "DiagnosticReport"
+      }
+    },
+    {
       "fullUrl": "urn:uuid:f1ee0d3c-a27e-498e-8190-b58a72b1309e",
       "resource": {
         "resourceType": "MedicationRequest",

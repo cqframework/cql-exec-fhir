@@ -394,7 +394,7 @@ describe('#R4 v4.0.1', () => {
     ]);
   });
 
-  it('should support _is', () => {
+  it('should support _is for classes', () => {
     const pt = patientSource.currentPatient();
     const condition = pt.findRecord('Condition');
     expect(condition._is({ name: '{http://hl7.org/fhir}Condition', type: 'NamedTypeSpecifier' })).to
@@ -413,6 +413,164 @@ describe('#R4 v4.0.1', () => {
       .to.be.false;
     expect(condition._is({ name: '{http://hl7.org/fhir}Condition', type: 'IntervalTypeSpecifier' }))
       .to.be.false;
+  });
+
+  it('should support Is on a constructed FHIR primitive (cql-execution #391)', async () => {
+    // ELM for: FHIR.base64Binary { value: 'SGVsbG8=' } is FHIR.base64Binary
+    // Construct through the engine so this also exercises preservation of the FHIR type.
+    const library = new cql.Library({
+      library: {
+        identifier: { id: 'TestCase' },
+        usings: {
+          def: [{ localIdentifier: 'FHIR', uri: 'http://hl7.org/fhir', version: '4.0.1' }]
+        },
+        statements: {
+          def: [
+            {
+              type: 'ExpressionDef',
+              name: 'TestBase64Binary',
+              context: 'Patient',
+              expression: {
+                type: 'Is',
+                isType: '{http://hl7.org/fhir}base64Binary',
+                operand: {
+                  type: 'Instance',
+                  classType: '{http://hl7.org/fhir}base64Binary',
+                  element: [
+                    {
+                      name: 'value',
+                      value: {
+                        type: 'Literal',
+                        valueType: '{urn:hl7-org:elm-types:r1}String',
+                        value: 'SGVsbG8='
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    });
+    const executor = new cql.Executor(library);
+    const results = await executor.exec(patientSource);
+    const patientResults = Object.values(results.patientResults);
+    expect(patientResults).to.have.lengthOf(2);
+    patientResults.forEach(result => expect(result.TestBase64Binary).to.be.true);
+  });
+
+  it('should support Is on a constructed FHIR primitive as its parent type', async () => {
+    // ELM for: FHIR.base64Binary { value: 'SGVsbG8=' } is FHIR.Element
+    // This requires Instance to use the FHIR model's type hierarchy.
+    const library = new cql.Library({
+      library: {
+        identifier: { id: 'TestCase' },
+        usings: {
+          def: [{ localIdentifier: 'FHIR', uri: 'http://hl7.org/fhir', version: '4.0.1' }]
+        },
+        statements: {
+          def: [
+            {
+              type: 'ExpressionDef',
+              name: 'TestBase64BinaryIsElement',
+              context: 'Patient',
+              expression: {
+                type: 'Is',
+                isType: '{http://hl7.org/fhir}Element',
+                operand: {
+                  type: 'Instance',
+                  classType: '{http://hl7.org/fhir}base64Binary',
+                  element: [
+                    {
+                      name: 'value',
+                      value: {
+                        type: 'Literal',
+                        valueType: '{urn:hl7-org:elm-types:r1}String',
+                        value: 'SGVsbG8='
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    });
+    const executor = new cql.Executor(library);
+    const results = await executor.exec(patientSource);
+    const patientResults = Object.values(results.patientResults);
+    expect(patientResults).to.have.lengthOf(2);
+    patientResults.forEach(result => expect(result.TestBase64BinaryIsElement).to.be.true);
+  });
+
+  it('should support Is on a fetched FHIR primitive', async () => {
+    // ELM for: First(([DiagnosticReport])[1].presentedForm).data is FHIR.base64Binary
+    // Only Luna has the DiagnosticReport attachment used by this test.
+    patientSource.reset();
+    patientSource.loadBundles([patientLuna]);
+    const library = new cql.Library({
+      library: {
+        identifier: { id: 'TestCase' },
+        usings: {
+          def: [{ localIdentifier: 'FHIR', uri: 'http://hl7.org/fhir', version: '4.0.1' }]
+        },
+        statements: {
+          def: [
+            {
+              type: 'ExpressionDef',
+              name: 'TestFetchedBase64Binary',
+              context: 'Patient',
+              expression: {
+                type: 'Is',
+                isType: '{http://hl7.org/fhir}base64Binary',
+                operand: {
+                  type: 'Property',
+                  path: 'data',
+                  source: {
+                    type: 'First',
+                    source: {
+                      type: 'Property',
+                      path: 'presentedForm',
+                      source: {
+                        type: 'Indexer',
+                        operand: [
+                          { type: 'Retrieve', dataType: '{http://hl7.org/fhir}DiagnosticReport' },
+                          {
+                            type: 'Literal',
+                            valueType: '{urn:hl7-org:elm-types:r1}Integer',
+                            value: '1'
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    });
+    const executor = new cql.Executor(library);
+    const results = await executor.exec(patientSource);
+    const patientResults = Object.values(results.patientResults);
+    expect(patientResults).to.have.lengthOf(1);
+    expect(patientResults[0].TestFetchedBase64Binary).to.be.true;
+  });
+
+  it('should support _is for primitives', () => {
+    const pt = patientSource.currentPatient();
+    const diagReport = pt.findRecords('DiagnosticReport')[1];
+    const data = diagReport.get('presentedForm')[0].get('data');
+
+    expect(data._is({ name: '{http://hl7.org/fhir}base64Binary', type: 'NamedTypeSpecifier' })).to
+      .be.true;
+    expect(data._is({ name: '{http://hl7.org/fhir}Element', type: 'NamedTypeSpecifier' })).to
+      .be.true;
+
+
   });
 });
 
