@@ -41,6 +41,10 @@ class FHIRWrapper {
     return new FHIRObject(fhirJson, targetClass, this._modelInfo);
   }
 
+  canCreate(classType) {
+    return !!this._modelInfo.findClass(classType);
+  }
+
   createInstance(classType, obj) {
     const targetClass = this._modelInfo.findClass(classType);
     if (!targetClass) {
@@ -113,7 +117,7 @@ class PatientSource {
     this._bundles = [];
   }
 
-  getDataModelProvider() {
+  getInstanceCreator() {
     return new FHIRWrapper(this._modelInfo, true);
   }
 }
